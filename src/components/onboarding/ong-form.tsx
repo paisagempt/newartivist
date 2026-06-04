@@ -1,21 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Clock } from 'lucide-react';
+import { LogoutButton } from '@/components/logout-button';
 
 export function OngForm() {
-  const router = useRouter();
   const [name, setName] = useState('');
   const [mission, setMission] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [country, setCountry] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,14 +33,33 @@ export function OngForm() {
         }),
       });
       if (!res.ok) throw new Error('Erro ao guardar perfil.');
-      toast.success('Perfil criado! Aguarda a verificação da equipa Artivist.');
-      router.push('/dashboard');
+      setSubmitted(true);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (submitted) {
+    return (
+      <Card className="w-full max-w-md text-center">
+        <CardContent className="pt-8 pb-8 flex flex-col items-center gap-4">
+          <div className="size-14 rounded-full bg-yellow-100 flex items-center justify-center">
+            <Clock className="size-7 text-yellow-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-1">Registo submetido!</h2>
+            <p className="text-muted-foreground text-sm">
+              A equipa Artivist irá verificar os dados de <span className="font-medium">{name}</span> e ativar o teu perfil em breve.
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground">Receberás uma notificação quando a verificação estiver concluída.</p>
+          <LogoutButton />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md">
