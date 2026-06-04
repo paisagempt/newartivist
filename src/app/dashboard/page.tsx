@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { LogoutButton } from '@/components/logout-button';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -15,7 +16,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">Bem-vindo à Artivist</h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-2xl font-bold">Bem-vindo à Artivist</h1>
+        <LogoutButton />
+      </div>
       <p className="text-muted-foreground mb-8">A plataforma está a ser construída. Mais em breve.</p>
       <div className="rounded-xl border p-6 space-y-3 text-sm">
         <p><span className="font-medium">Email:</span> {user.email}</p>
