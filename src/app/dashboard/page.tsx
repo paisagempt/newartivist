@@ -25,7 +25,7 @@ export default async function DashboardPage() {
   let artistListings: any[] = [];
 
   if (role === 'artist') {
-    const { data } = await supabase
+    const { data } = await admin
       .from('artists')
       .select('id, bio, portfolio_url, total_raised_eur')
       .eq('user_id', user.id)
@@ -33,7 +33,7 @@ export default async function DashboardPage() {
     if (!data) redirect('/onboarding');
     artistProfile = data;
 
-    const { data: listings } = await supabase
+    const { data: listings } = await admin
       .from('listings')
       .select('id, title, type, price_eur, edition_size, editions_sold, status, cover_image_url')
       .eq('artist_id', data.id)
@@ -42,7 +42,7 @@ export default async function DashboardPage() {
   }
 
   if (role === 'ong') {
-    const { data } = await supabase
+    const { data } = await admin
       .from('ongs')
       .select('name, mission, registration_number, country, verified, total_received_eur')
       .eq('user_id', user.id)
