@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { LogoutButton } from '@/components/logout-button';
+import Link from 'next/link';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -19,14 +20,23 @@ export default async function DashboardPage() {
   let artistProfile = null;
   let ongProfile = null;
 
+  let artistListings: any[] = [];
+
   if (role === 'artist') {
     const { data } = await supabase
       .from('artists')
-      .select('bio, portfolio_url, verified, total_raised_eur')
+      .select('id, bio, portfolio_url, total_raised_eur')
       .eq('user_id', user.id)
       .single();
     if (!data) redirect('/onboarding');
     artistProfile = data;
+
+    const { data: listings } = await supabase
+      .from('listings')
+      .select('id, title, type, price_eur, edition_size, editions_sold, status, cover_image_url')
+      .eq('artist_id', data.id)
+      .order('created_at', { ascending: false });
+    artistListings = listings ?? [];
   }
 
   if (role === 'ong') {
@@ -65,9 +75,43 @@ export default async function DashboardPage() {
             )}
             <p><span className="font-medium">Total angariado para causas:</span> €{Number(artistProfile.total_raised_eur).toFixed(2)}</p>
           </div>
-          <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground text-sm">
-            As tuas obras aparecerão aqui. Em breve poderás listar a tua primeira obra.
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">As minhas obras</h2>
+            <Link href="/artworks/new" className="text-sm font-medium text-primary hover:underline">
+              + Nova obra
+            </Link>
           </div>
+          {artistListings.length === 0 ? (
+            <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground text-sm">
+              Ainda não tens obras listadas.{' '}
+              <Link href="/artworks/new" className="text-primary underline underline-offset-2">
+                Lista a tua primeira obra
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {artistListings.map((listing) => (
+                <div key={listing.id} className="rounded-xl border p-4 flex items-center gap-4 text-sm">
+                  {listing.cover_image_url && (
+                    <img src={listing.cover_image_url} alt={listing.title} className="size-12 rounded-lg object-cover shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{listing.title}</p>
+                    <p className="text-muted-foreground">
+                      €{Number(listing.price_eur).toFixed(2)} · {listing.type === 'digital' ? 'Digital' : listing.type === 'physical' ? 'Física' : 'Ambas'} · {listing.editions_sold}/{listing.edition_size} vendidas
+                    </p>
+                  </div>
+                  <span className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${
+                    listing.status === 'active' ? 'bg-green-100 text-green-700' :
+                    listing.status === 'sold' ? 'bg-zinc-100 text-zinc-600' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {listing.status === 'active' ? 'Activa' : listing.status === 'sold' ? 'Vendida' : listing.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
