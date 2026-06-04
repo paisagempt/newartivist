@@ -1,6 +1,39 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+async function createCrossmintCollection({
+  title,
+  description,
+  imageUrl,
+  editionSize,
+}: {
+  title: string;
+  description: string;
+  imageUrl: string;
+  editionSize: number;
+}) {
+  const res = await fetch('https://staging.crossmint.com/api/2022-06-09/collections/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-KEY': process.env.CROSSMINT_SERVER_KEY!,
+    },
+    body: JSON.stringify({
+      chain: 'solana',
+      metadata: {
+        name: title,
+        description: description || title,
+        imageUrl,
+      },
+      fungibility: 'non-fungible',
+      supplyLimit: editionSize,
+    }),
+  });
+  const data = await res.json();
+  console.log('[crossmint] collection response:', JSON.stringify(data));
+  return data;
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -9,7 +42,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
-  // Obter o id do perfil de artista
   const { data: artist } = await supabase
     .from('artists')
     .select('id')
@@ -33,7 +65,8 @@ export async function POST(request: Request) {
     cover_image_url,
   } = body;
 
-  const { data, error } = await supabase.from('listings').insert({
+  // Criar listagem
+  const { data: listing, error } = await supabase.from('listings').insert({
     artist_id: artist.id,
     ong_id,
     title,
@@ -54,7 +87,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ id: data.id });
+  // Criar collection no Crossmint
+  let crossmintCollectionId: string | null = null;
+  try {
+    const crossmintData = await createCrossmintCollection({
+      title,
+      description: description ?? '',
+      imageUrl: cover_image_url,
+      editionSize: Number(edition_size),
+    });
+    crossmintCollectionId = crossmintData.id ?? crossmintData.collectionId ?? null;
+
+    if (crossmintCollectionId) {
+      await supabase
+        .from('listings')
+        .update({ crossmint_collection_id: crossmintCollectionId })
+        .eq('id', listing.id);
+    }
+  } catch (err) {
+    console.error('[artworks] Crossmint error:', err);
+    // Não bloqueia — a listagem já foi criada
+  }
+
+  return NextResponse.json({ id: listing.id, crossmint_collection_id: crossmintCollectionId });
 }
 
 export async function GET() {
@@ -71,13 +126,11 @@ export async function GET() {
     .eq('user_id', user.id)
     .single();
 
-  if (!artist) {
-    return NextResponse.json({ listings: [] });
-  }
+  if (!artist) return NextResponse.json({ listings: [] });
 
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, title, type, price_eur, edition_size, editions_sold, ong_percentage, status, cover_image_url, created_at')
+    .select('id, title, type, price_eur, edition_size, editions_sold, ong_percentage, status, cover_image_url, crossmint_collection_id, created_at')
     .eq('artist_id', artist.id)
     .order('created_at', { ascending: false });
 
