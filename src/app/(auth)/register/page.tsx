@@ -50,18 +50,17 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?role=${selectedRole}`,
+        },
+      });
       if (error) throw error;
 
-      // Criar carteira Crossmint + registo na tabela users
-      await fetch('/api/create-wallet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: selectedRole }),
-      });
-
       toast.success('Conta criada! Verifica o teu email para confirmar.');
-      router.push('/dashboard');
+      router.push('/login');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao criar conta.');
     } finally {
