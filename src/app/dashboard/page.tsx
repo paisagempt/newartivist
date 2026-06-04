@@ -19,6 +19,8 @@ export default async function DashboardPage() {
 
   const role = profile?.role;
 
+  if (role === 'admin') redirect('/admin');
+
   let artistProfile = null;
   let ongProfile = null;
 
