@@ -60,7 +60,7 @@ export default function RegisterPage() {
       });
 
       toast.success('Conta criada com sucesso!');
-      router.push('/dashboard');
+      router.push('/onboarding');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao criar conta.');
     } finally {
