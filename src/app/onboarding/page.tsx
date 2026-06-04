@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ArtistForm } from '@/components/onboarding/artist-form';
 import { OngForm } from '@/components/onboarding/ong-form';
@@ -10,7 +10,9 @@ export default async function OnboardingPage() {
 
   if (!user) redirect('/login');
 
-  const { data: profile } = await supabase
+  const admin = createAdminClient();
+
+  const { data: profile } = await admin
     .from('users')
     .select('role')
     .eq('id', user.id)
@@ -18,12 +20,10 @@ export default async function OnboardingPage() {
 
   const role = profile?.role;
 
-  // Buyers não precisam de onboarding
   if (role === 'buyer') redirect('/dashboard');
 
-  // Verificar se já completou o onboarding
   if (role === 'artist') {
-    const { data: artistProfile } = await supabase
+    const { data: artistProfile } = await admin
       .from('artists')
       .select('id')
       .eq('user_id', user.id)
@@ -32,7 +32,7 @@ export default async function OnboardingPage() {
   }
 
   if (role === 'ong') {
-    const { data: ongProfile } = await supabase
+    const { data: ongProfile } = await admin
       .from('ongs')
       .select('id')
       .eq('user_id', user.id)
