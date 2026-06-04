@@ -1,6 +1,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { LogoutButton } from '@/components/logout-button';
+import { ArtworkImage } from '@/components/artworks/artwork-image';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -97,7 +98,7 @@ export default async function DashboardPage() {
               {artistListings.map((listing) => (
                 <div key={listing.id} className="rounded-xl border p-4 flex items-center gap-4 text-sm">
                   {listing.cover_image_url && (
-                    <img src={listing.cover_image_url} alt={listing.title} className="size-12 rounded-lg object-cover shrink-0" />
+                    <ArtworkImage src={listing.cover_image_url} alt={listing.title} />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{listing.title}</p>
