@@ -50,17 +50,17 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?role=${selectedRole}`,
-        },
-      });
+      const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
 
-      toast.success('Conta criada! Verifica o teu email para confirmar.');
-      router.push('/login');
+      await fetch('/api/create-wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: selectedRole }),
+      });
+
+      toast.success('Conta criada com sucesso!');
+      router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao criar conta.');
     } finally {
