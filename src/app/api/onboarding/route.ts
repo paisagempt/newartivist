@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       user_id: user.id,
       bio: bio ?? null,
       portfolio_url: portfolio_url ?? null,
-      verified: false,
+      verified: true,
       total_raised_eur: 0,
     });
     if (error) {

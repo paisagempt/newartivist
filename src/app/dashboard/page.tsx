@@ -63,12 +63,6 @@ export default async function DashboardPage() {
                 </a>
               </p>
             )}
-            <p>
-              <span className="font-medium">Estado:</span>{' '}
-              <span className={artistProfile.verified ? 'text-green-600' : 'text-yellow-600'}>
-                {artistProfile.verified ? 'Verificado' : 'Pendente de verificação'}
-              </span>
-            </p>
             <p><span className="font-medium">Total angariado para causas:</span> €{Number(artistProfile.total_raised_eur).toFixed(2)}</p>
           </div>
           <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground text-sm">
