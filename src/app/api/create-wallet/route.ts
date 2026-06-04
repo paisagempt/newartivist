@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -29,7 +29,8 @@ export async function POST(request: Request) {
     const walletAddress = walletData.address ?? null;
 
     // Criar registo em public.users
-    const { error } = await supabase.from('users').upsert({
+    const admin = createAdminClient();
+    const { error } = await admin.from('users').upsert({
       id: user.id,
       email: user.email!,
       role: role ?? 'buyer',

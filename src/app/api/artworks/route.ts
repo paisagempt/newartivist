@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 async function createCrossmintCollection({
@@ -66,7 +66,8 @@ export async function POST(request: Request) {
   } = body;
 
   // Criar listagem
-  const { data: listing, error } = await supabase.from('listings').insert({
+  const admin = createAdminClient();
+  const { data: listing, error } = await admin.from('listings').insert({
     artist_id: artist.id,
     ong_id,
     title,
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
     crossmintCollectionId = crossmintData.id ?? crossmintData.collectionId ?? null;
 
     if (crossmintCollectionId) {
-      await supabase
+      await admin
         .from('listings')
         .update({ crossmint_collection_id: crossmintCollectionId })
         .eq('id', listing.id);

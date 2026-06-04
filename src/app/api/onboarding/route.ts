@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -9,12 +9,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
   }
 
+  const admin = createAdminClient();
   const body = await request.json();
   const { role } = body;
 
   if (role === 'artist') {
     const { bio, portfolio_url } = body;
-    const { error } = await supabase.from('artists').upsert({
+    const { error } = await admin.from('artists').upsert({
       user_id: user.id,
       bio: bio ?? null,
       portfolio_url: portfolio_url ?? null,
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
     }
   } else if (role === 'ong') {
     const { name, mission, registration_number, country } = body;
-    const { error } = await supabase.from('ongs').upsert({
+    const { error } = await admin.from('ongs').upsert({
       user_id: user.id,
       name,
       mission: mission ?? null,
