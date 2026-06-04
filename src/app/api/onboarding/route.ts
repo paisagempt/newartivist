@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       portfolio_url: portfolio_url ?? null,
       verified: true,
       total_raised_eur: 0,
-    });
+    }, { onConflict: 'user_id' });
     if (error) {
       console.error('[onboarding] artist upsert error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       country,
       verified: false,
       total_received_eur: 0,
-    });
+    }, { onConflict: 'user_id' });
     if (error) {
       console.error('[onboarding] ong upsert error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
