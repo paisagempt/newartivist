@@ -23,8 +23,9 @@ export async function GET(request: Request) {
             'X-API-KEY': process.env.CROSSMINT_SERVER_KEY!,
           },
           body: JSON.stringify({
-            type: 'solana-mpc-wallet',
-            linkedUser: `email:${user.email}:${process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_KEY}`,
+            type: 'solana-smart-wallet',
+            linkedUser: `email:${user.email}`,
+            config: { adminSigner: { type: 'solana-keypair', address: process.env.ARTIVIST_PLATFORM_WALLET } },
           }),
         });
         const walletData = await crossmintRes.json();
@@ -34,13 +35,29 @@ export async function GET(request: Request) {
         console.error('[callback] Crossmint error:', err);
       }
 
-      // Criar registo em public.users
-      const { error: upsertError } = await supabase.from('users').upsert({
-        id: user.id,
-        email: user.email!,
-        role,
-        wallet_address: walletAddress,
-      });
+      // Verificar se utilizador já existe
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id, wallet_address')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      let upsertError;
+      if (!existingUser) {
+        // Novo utilizador — criar registo completo
+        ({ error: upsertError } = await supabase.from('users').insert({
+          id: user.id,
+          email: user.email!,
+          role,
+          wallet_address: walletAddress,
+        }));
+      } else if (!existingUser.wallet_address && walletAddress) {
+        // Utilizador existente sem wallet — actualizar só a wallet
+        ({ error: upsertError } = await supabase
+          .from('users')
+          .update({ wallet_address: walletAddress })
+          .eq('id', user.id));
+      }
 
       if (upsertError) {
         console.error('[callback] upsert error:', upsertError);

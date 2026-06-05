@@ -22,10 +22,37 @@ export default async function DashboardPage() {
 
   if (role === 'admin') redirect('/admin');
 
+  // Criar wallet se ainda não existe
+  if (!profile?.wallet_address) {
+    try {
+      const crossmintRes = await fetch('https://staging.crossmint.com/api/v1-alpha2/wallets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-KEY': process.env.CROSSMINT_SERVER_KEY!,
+        },
+        body: JSON.stringify({
+          type: 'solana-smart-wallet',
+          linkedUser: `email:${user.email}`,
+          config: { adminSigner: { type: 'solana-keypair', address: process.env.ARTIVIST_PLATFORM_WALLET } },
+        }),
+      });
+      const walletData = await crossmintRes.json();
+      const walletAddress = walletData.address ?? null;
+      if (walletAddress) {
+        await admin.from('users').update({ wallet_address: walletAddress }).eq('id', user.id);
+      }
+    } catch (err) {
+      console.error('[dashboard] wallet creation error:', err);
+    }
+  }
+
   let artistProfile = null;
   let ongProfile = null;
 
   let artistListings: any[] = [];
+  let buyerPurchases: any[] = [];
+  let buyerImpactEur = 0;
 
   if (role === 'artist') {
     const { data } = await admin
@@ -42,6 +69,16 @@ export default async function DashboardPage() {
       .eq('artist_id', data.id)
       .order('created_at', { ascending: false });
     artistListings = listings ?? [];
+  }
+
+  if (role === 'buyer') {
+    const { data: sales } = await admin
+      .from('sales')
+      .select('id, amount_eur, ong_amount_eur, created_at, listing_id, listings(title, type, cover_image_url)')
+      .eq('buyer_email', user.email!)
+      .order('created_at', { ascending: false });
+    buyerPurchases = sales ?? [];
+    buyerImpactEur = buyerPurchases.reduce((sum: number, s: any) => sum + Number(s.ong_amount_eur ?? 0), 0);
   }
 
   if (role === 'ong') {
@@ -148,11 +185,43 @@ export default async function DashboardPage() {
         <div className="space-y-6">
           <div className="rounded-xl border p-6 space-y-3 text-sm">
             <p><span className="font-medium">Email:</span> {user.email}</p>
-            <p><span className="font-medium">Impacto gerado:</span> €0,00 doado para causas</p>
+            <p><span className="font-medium">Impacto gerado:</span> €{buyerImpactEur.toFixed(2)} doado para causas</p>
           </div>
-          <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground text-sm">
-            A tua coleção de obras aparecerá aqui. Em breve poderás comprar a tua primeira obra.
-          </div>
+          <h2 className="font-semibold">A minha coleção</h2>
+          {buyerPurchases.length === 0 ? (
+            <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground text-sm">
+              Ainda não tens obras na tua coleção.{' '}
+              <a href="/marketplace" className="text-primary underline underline-offset-2">
+                Explora o marketplace
+              </a>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {buyerPurchases.map((sale: any) => {
+                const listing = sale.listings as any;
+                return (
+                  <div key={sale.id} className="rounded-xl border p-4 flex items-center gap-4 text-sm">
+                    {listing?.cover_image_url && (
+                      <ArtworkImage src={listing.cover_image_url} alt={listing.title ?? ''} />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{listing?.title ?? '—'}</p>
+                      <p className="text-muted-foreground">
+                        €{Number(sale.amount_eur).toFixed(2)} ·{' '}
+                        {listing?.type === 'digital' ? 'Digital' : listing?.type === 'physical' ? 'Física' : 'Ambas'}
+                      </p>
+                      {Number(sale.ong_amount_eur) > 0 && (
+                        <p className="text-green-600">€{Number(sale.ong_amount_eur).toFixed(2)} doados para causa</p>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">
+                      Confirmada
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

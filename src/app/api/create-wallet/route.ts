@@ -20,8 +20,9 @@ export async function POST(request: Request) {
         'X-API-KEY': process.env.CROSSMINT_SERVER_KEY!,
       },
       body: JSON.stringify({
-        type: 'solana-mpc-wallet',
-        linkedUser: `email:${user.email}:${process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_KEY}`,
+        type: 'solana-smart-wallet',
+        linkedUser: `email:${user.email}`,
+        config: { adminSigner: { type: 'solana-keypair', address: process.env.ARTIVIST_PLATFORM_WALLET } },
       }),
     });
 

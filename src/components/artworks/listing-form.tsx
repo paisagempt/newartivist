@@ -106,7 +106,7 @@ export function ListingForm({ ongs }: { ongs: Ong[] }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erro ao criar listagem.');
-      toast.success('Obra publicada e NFT criado!');
+      toast.success('Obra publicada e certificado digital criado!');
       router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.message);
@@ -157,7 +157,7 @@ export function ListingForm({ ongs }: { ongs: Ong[] }) {
             onChange={handleImageSelect}
             className="hidden"
           />
-          <p className="text-xs text-muted-foreground mt-2">Esta imagem será usada como NFT da obra na blockchain Solana.</p>
+          <p className="text-xs text-muted-foreground mt-2">Esta imagem representa a obra no certificado digital emitido na blockchain.</p>
         </CardContent>
       </Card>
 
@@ -191,7 +191,7 @@ export function ListingForm({ ongs }: { ongs: Ong[] }) {
                 }`}
               >
                 <p className="font-medium">Digital</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Ficheiro digital · NFT é a obra</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Ficheiro digital · arte digital na blockchain</p>
               </button>
               <button
                 type="button"
@@ -201,7 +201,7 @@ export function ListingForm({ ongs }: { ongs: Ong[] }) {
                 }`}
               >
                 <p className="font-medium">Física</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Entrega física · NFT é o certificado</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Entrega física · certificado digital na blockchain</p>
               </button>
             </div>
           </div>
@@ -294,7 +294,7 @@ export function ListingForm({ ongs }: { ongs: Ong[] }) {
 
       <Button type="submit" className="w-full" disabled={isLoading || isUploading || ongs.length === 0}>
         {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
-        Publicar obra e criar NFT
+        Publicar obra
       </Button>
     </form>
   );

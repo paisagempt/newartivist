@@ -18,6 +18,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [view, setView] = useState<'login' | 'forgot'>('login');
+  const [resetSent, setResetSent] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +34,66 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao enviar email.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (view === 'forgot') {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">Artivist</CardTitle>
+          <CardDescription>Recuperar senha</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {resetSent ? (
+            <div className="flex flex-col gap-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                Enviámos um link para <strong>{email}</strong>. Verifica a tua caixa de entrada.
+              </p>
+              <Button variant="outline" onClick={() => { setView('login'); setResetSent(false); }}>
+                Voltar ao login
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleForgot} className="flex flex-col gap-4">
+              <button type="button" onClick={() => setView('login')} className="text-sm text-muted-foreground hover:text-foreground text-left">
+                ← Voltar
+              </button>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="reset-email">Email da tua conta</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="tu@exemplo.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                Enviar link de recuperação
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md">
@@ -53,7 +115,16 @@ export default function LoginPage() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="password">Senha</Label>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="password">Senha</Label>
+              <button
+                type="button"
+                onClick={() => setView('forgot')}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Esqueci a senha
+              </button>
+            </div>
             <Input
               id="password"
               type="password"
