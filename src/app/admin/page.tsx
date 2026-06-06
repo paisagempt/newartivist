@@ -2,8 +2,8 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { LogoutButton } from '@/components/logout-button';
 import { ApproveOngButton } from '@/components/admin/approve-ong-button';
-import { MarkSentButton } from '@/components/admin/mark-sent-button';
 import { FlushDistributionsButton } from '@/components/admin/flush-distributions-button';
+import { FixDistributionsButton } from '@/components/admin/fix-distributions-button';
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -56,7 +56,10 @@ export default async function AdminPage() {
               </p>
             )}
           </div>
-          {pending.length > 0 && <FlushDistributionsButton />}
+          <div className="flex items-center gap-2">
+            <FixDistributionsButton />
+            {pending.length > 0 && <FlushDistributionsButton />}
+          </div>
         </div>
 
         {pending.length === 0 ? (
@@ -83,7 +86,9 @@ export default async function AdminPage() {
                     €{Number(d.amount_eur).toFixed(2)} · {Number(d.amount_usdc ?? 0).toFixed(4)} USDC · {new Date(d.created_at).toLocaleDateString('pt-PT')}
                   </p>
                 </div>
-                <MarkSentButton distributionId={d.id} />
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {d.wallet_address ? 'Com wallet' : 'Sem wallet'}
+                </span>
               </div>
             ))}
           </div>

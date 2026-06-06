@@ -146,7 +146,7 @@ export default async function DashboardPage() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-xl border bg-white dark:bg-zinc-900 p-4 text-center">
-                <p className="text-2xl font-bold">€{artistEarnings.toFixed(0)}</p>
+                <p className="text-2xl font-bold">€{artistEarnings.toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground mt-1">Os meus ganhos</p>
               </div>
               <div className="rounded-xl border bg-white dark:bg-zinc-900 p-4 text-center">

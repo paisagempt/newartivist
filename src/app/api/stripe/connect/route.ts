@@ -18,27 +18,35 @@ export async function POST() {
     return NextResponse.json({ error: 'Apenas artistas e ONGs podem ligar conta bancária' }, { status: 403 });
   }
 
-  let accountId = profile?.stripe_account_id;
+  try {
+    let accountId = profile?.stripe_account_id;
 
-  // Criar conta Express se ainda não existir
-  if (!accountId) {
-    const account = await stripe.accounts.create({
-      type: 'express',
-      email: user.email,
-      capabilities: { transfers: { requested: true } },
-      metadata: { user_id: user.id },
+    // Criar conta Express se ainda não existir
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: 'express',
+        email: user.email,
+        capabilities: { transfers: { requested: true } },
+        metadata: { user_id: user.id },
+      });
+      accountId = account.id;
+      await admin.from('users').update({ stripe_account_id: accountId }).eq('id', user.id);
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${baseUrl}/dashboard/payments?stripe=refresh`,
+      return_url: `${baseUrl}/dashboard/payments?stripe=success`,
+      type: 'account_onboarding',
     });
-    accountId = account.id;
-    await admin.from('users').update({ stripe_account_id: accountId }).eq('id', user.id);
+
+    return NextResponse.json({ url: accountLink.url });
+  } catch (err: any) {
+    console.error('[stripe/connect] error:', err?.message ?? err);
+    return NextResponse.json(
+      { error: err?.message ?? 'Erro ao ligar conta Stripe' },
+      { status: 500 }
+    );
   }
-
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
-  const accountLink = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: `${baseUrl}/dashboard/payments?stripe=refresh`,
-    return_url: `${baseUrl}/dashboard/payments?stripe=success`,
-    type: 'account_onboarding',
-  });
-
-  return NextResponse.json({ url: accountLink.url });
 }
