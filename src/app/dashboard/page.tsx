@@ -115,14 +115,24 @@ export default async function DashboardPage() {
           {role === 'ong' && 'Dashboard — ONG'}
           {role === 'buyer' && 'Dashboard — Comprador'}
         </h1>
-        <a
-          href="https://staging.crossmint.com/user/collection"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-medium bg-foreground text-background px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
-        >
-          Ver a minha wallet →
-        </a>
+        <div className="flex items-center gap-2">
+          {(role === 'artist' || role === 'ong') && (
+            <Link
+              href="/dashboard/payments"
+              className="text-sm font-medium border px-4 py-2 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+            >
+              Pagamentos
+            </Link>
+          )}
+          <a
+            href="https://staging.crossmint.com/user/collection"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium bg-foreground text-background px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
+          >
+            Ver wallet →
+          </a>
+        </div>
       </div>
 
       {role === 'artist' && artistProfile && (() => {

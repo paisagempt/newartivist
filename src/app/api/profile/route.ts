@@ -12,6 +12,16 @@ export async function PATCH(request: Request) {
 
   const { data: profile } = await admin.from('users').select('role').eq('id', user.id).single();
 
+  // Actualizar wallet_address (disponível para todos os roles)
+  if (body.wallet_address !== undefined) {
+    const { error } = await admin
+      .from('users')
+      .update({ wallet_address: body.wallet_address })
+      .eq('id', user.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
   if (profile?.role === 'artist') {
     const { bio, portfolio_url } = body;
     const { error } = await admin

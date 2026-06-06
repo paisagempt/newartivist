@@ -25,6 +25,8 @@ async function recordDistributions({
   amountEur,
   artistWallet,
   ongWallet,
+  artistUserId,
+  ongUserId,
   artistShare,
   ongShare,
 }: {
@@ -33,6 +35,8 @@ async function recordDistributions({
   amountEur: number;
   artistWallet: string | null;
   ongWallet: string | null;
+  artistUserId: string | null;
+  ongUserId: string | null;
   artistShare: number;
   ongShare: number;
 }) {
@@ -40,23 +44,25 @@ async function recordDistributions({
   const totalUsdc = await eurToUsdc(amountEur);
   const rows = [];
 
-  if (artistWallet && artistShare > 0) {
+  if (artistShare > 0 && artistUserId) {
     rows.push({
       crossmint_order_id: crossmintOrderId,
       listing_id: listingId,
       recipient_type: 'artist',
       wallet_address: artistWallet,
+      user_id: artistUserId,
       amount_eur: Number(((amountEur * artistShare) / 100).toFixed(2)),
       amount_usdc: Number(((totalUsdc * artistShare) / 100).toFixed(6)),
     });
   }
 
-  if (ongWallet && ongShare > 0) {
+  if (ongShare > 0 && ongUserId) {
     rows.push({
       crossmint_order_id: crossmintOrderId,
       listing_id: listingId,
       recipient_type: 'ong',
       wallet_address: ongWallet,
+      user_id: ongUserId,
       amount_eur: Number(((amountEur * ongShare) / 100).toFixed(2)),
       amount_usdc: Number(((totalUsdc * ongShare) / 100).toFixed(6)),
     });
@@ -177,6 +183,8 @@ export async function POST(request: Request) {
 
   let artistWallet: string | null = null;
   let ongWallet: string | null = null;
+  let artistUserId: string | null = null;
+  let ongUserId: string | null = null;
 
   if (listing.artist_id) {
     const { data: artistRow } = await admin
@@ -185,6 +193,7 @@ export async function POST(request: Request) {
       .eq('id', listing.artist_id)
       .single();
     if (artistRow?.user_id) {
+      artistUserId = artistRow.user_id;
       const { data: artistUser } = await admin
         .from('users')
         .select('wallet_address')
@@ -201,6 +210,7 @@ export async function POST(request: Request) {
       .eq('id', listing.ong_id)
       .single();
     if (ongRow?.user_id) {
+      ongUserId = ongRow.user_id;
       const { data: ongUser } = await admin
         .from('users')
         .select('wallet_address')
@@ -337,6 +347,8 @@ export async function POST(request: Request) {
     amountEur: amount,
     artistWallet,
     ongWallet,
+    artistUserId,
+    ongUserId,
     artistShare: artistPct,
     ongShare: ongPct,
   });
