@@ -34,28 +34,38 @@ export function FulfillOrderButton({ saleId }: { saleId: string }) {
 
   if (!open) {
     return (
-      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-        Marcar como enviado
+      <Button onClick={() => setOpen(true)} className="w-full">
+        Registar envio
       </Button>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <input
-        type="text"
-        value={tracking}
-        onChange={e => setTracking(e.target.value)}
-        placeholder="Nº tracking (opcional)"
-        className="border rounded-lg px-3 py-1.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-foreground w-44"
-      />
-      <Button size="sm" onClick={handleShip} disabled={loading}>
-        {loading && <Loader2 className="mr-1 size-3 animate-spin" />}
-        Confirmar
-      </Button>
-      <button onClick={() => setOpen(false)} className="text-xs text-muted-foreground hover:text-foreground">
-        Cancelar
-      </button>
+    <div className="border rounded-xl p-4 space-y-3 bg-zinc-50 dark:bg-zinc-800">
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Código de rastreio</label>
+        <input
+          type="text"
+          value={tracking}
+          onChange={e => setTracking(e.target.value)}
+          placeholder="Ex: PT123456789PT"
+          autoFocus
+          className="w-full border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-foreground font-mono"
+          onKeyDown={e => e.key === 'Enter' && handleShip()}
+        />
+        <p className="text-xs text-muted-foreground">
+          Opcional mas recomendado — o comprador poderá acompanhar o envio.
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={handleShip} disabled={loading} className="flex-1">
+          {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
+          Confirmar envio
+        </Button>
+        <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+          Cancelar
+        </Button>
+      </div>
     </div>
   );
 }

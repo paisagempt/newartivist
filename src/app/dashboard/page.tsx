@@ -161,8 +161,57 @@ export default async function DashboardPage() {
           return sum + Number(l.price_eur) * l.editions_sold * Number(l.ong_percentage ?? 0) / 100;
         }, 0);
         const activeListings = artistListings.filter((l: any) => l.status === 'active').length;
+        const pendingShipments = artistPhysicalSales.filter((s: any) =>
+          s.fulfillment_status === 'pending' || s.fulfillment_status === 'processing'
+        );
         return (
           <div className="space-y-6">
+            {/* Encomendas urgentes por enviar — topo e destacadas */}
+            {pendingShipments.length > 0 && (
+              <section className="rounded-2xl border-2 border-amber-400 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-600 p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                  <h2 className="font-semibold text-amber-900 dark:text-amber-200">
+                    {pendingShipments.length} encomenda{pendingShipments.length !== 1 ? 's' : ''} por enviar
+                  </h2>
+                </div>
+                <div className="space-y-4">
+                  {pendingShipments.map((sale: any) => {
+                    const addr = sale.shipping_address as any;
+                    return (
+                      <div key={sale.id} className="rounded-xl bg-white dark:bg-zinc-900 border border-amber-200 dark:border-amber-800 p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm">{(sale.listings as any)?.title ?? '—'}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {sale.buyer_email} · €{Number(sale.amount_eur).toFixed(2)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Compra: {new Date(sale.created_at).toLocaleDateString('pt-PT')}
+                            </p>
+                          </div>
+                          <Link
+                            href={`/dashboard/orders/${sale.id}`}
+                            className="text-xs text-muted-foreground hover:text-foreground shrink-0 underline underline-offset-2"
+                          >
+                            Ver detalhes
+                          </Link>
+                        </div>
+                        {addr && (
+                          <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900 px-3 py-2 text-xs space-y-0.5">
+                            <p className="font-medium text-amber-900 dark:text-amber-200">Morada de entrega</p>
+                            <p className="text-amber-800 dark:text-amber-300">{addr.name}</p>
+                            <p className="text-amber-800 dark:text-amber-300">{addr.line1}, {addr.postal_code} {addr.city}, {addr.country}</p>
+                          </div>
+                        )}
+                        <FulfillOrderButton saleId={sale.id} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-xl border bg-white dark:bg-zinc-900 p-4 text-center">
@@ -238,48 +287,33 @@ export default async function DashboardPage() {
                 })}
               </div>
             )}
-            {/* Encomendas físicas para enviar */}
-            {artistPhysicalSales.length > 0 && (
+            {/* Encomendas enviadas / histórico */}
+            {artistPhysicalSales.filter((s: any) => s.fulfillment_status === 'shipped' || s.fulfillment_status === 'delivered').length > 0 && (
               <div className="space-y-3">
-                <h2 className="font-semibold">Encomendas para enviar</h2>
-                {artistPhysicalSales.map((sale: any) => {
-                  const listing = sale.listings as any;
-                  const addr = sale.shipping_address as any;
-                  const statusLabel: Record<string, string> = {
-                    pending: 'Por enviar', processing: 'Em preparação',
-                    shipped: 'Enviado', delivered: 'Entregue',
-                  };
-                  const statusColor: Record<string, string> = {
-                    pending: 'bg-yellow-100 text-yellow-700',
-                    processing: 'bg-blue-100 text-blue-700',
-                    shipped: 'bg-blue-100 text-blue-700',
-                    delivered: 'bg-green-100 text-green-700',
-                  };
-                  return (
-                    <div key={sale.id} className="rounded-xl border bg-white dark:bg-zinc-900 p-4 space-y-3 text-sm">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="font-medium truncate">{listing?.title ?? '—'}</p>
+                <h2 className="font-semibold">Encomendas enviadas</h2>
+                {artistPhysicalSales
+                  .filter((s: any) => s.fulfillment_status === 'shipped' || s.fulfillment_status === 'delivered')
+                  .map((sale: any) => {
+                    const statusLabel: Record<string, string> = { shipped: 'Em trânsito', delivered: 'Entregue' };
+                    const statusColor: Record<string, string> = {
+                      shipped: 'bg-blue-100 text-blue-700',
+                      delivered: 'bg-green-100 text-green-700',
+                    };
+                    return (
+                      <Link key={sale.id} href={`/dashboard/orders/${sale.id}`} className="rounded-xl border bg-white dark:bg-zinc-900 p-4 flex items-center gap-4 text-sm hover:border-zinc-400 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{(sale.listings as any)?.title ?? '—'}</p>
                           <p className="text-muted-foreground text-xs mt-0.5">{sale.buyer_email} · €{Number(sale.amount_eur).toFixed(2)}</p>
-                          {addr && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {addr.name} · {addr.line1}, {addr.postal_code} {addr.city}, {addr.country}
-                            </p>
-                          )}
                           {sale.tracking_number && (
-                            <p className="text-xs mt-1">Tracking: <span className="font-mono">{sale.tracking_number}</span></p>
+                            <p className="text-xs font-mono text-muted-foreground mt-0.5">{sale.tracking_number}</p>
                           )}
                         </div>
                         <span className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${statusColor[sale.fulfillment_status] ?? 'bg-zinc-100 text-zinc-600'}`}>
                           {statusLabel[sale.fulfillment_status] ?? sale.fulfillment_status}
                         </span>
-                      </div>
-                      {sale.fulfillment_status === 'pending' || sale.fulfillment_status === 'processing' ? (
-                        <FulfillOrderButton saleId={sale.id} />
-                      ) : null}
-                    </div>
-                  );
-                })}
+                      </Link>
+                    );
+                  })}
               </div>
             )}
 
