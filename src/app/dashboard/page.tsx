@@ -2,6 +2,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ArtworkImage } from '@/components/artworks/artwork-image';
 import { NavHeader } from '@/components/layout/nav-header';
+import { FulfillOrderButton } from '@/components/dashboard/fulfill-order-button';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -51,7 +52,8 @@ export default async function DashboardPage() {
   let ongProfile = null;
 
   let artistListings: any[] = [];
-  let buyerPurchases: any[] = [];
+  let artistPhysicalSales: any[] = [];
+  let myPurchases: any[] = [];
   let buyerImpactEur = 0;
   let buyerTotalSpent = 0;
   let ongListings: any[] = [];
@@ -73,17 +75,32 @@ export default async function DashboardPage() {
       .eq('artist_id', data.id)
       .order('created_at', { ascending: false });
     artistListings = listings ?? [];
+
+    // Encomendas físicas para o artista enviar
+    const physicalListingIds = artistListings
+      .filter((l: any) => l.type === 'physical' || l.type === 'both')
+      .map((l: any) => l.id);
+    if (physicalListingIds.length > 0) {
+      const { data: physSales } = await admin
+        .from('sales')
+        .select('id, buyer_email, amount_eur, fulfillment_status, tracking_number, shipped_at, created_at, shipping_address, listing_id, listings(title, cover_image_url)')
+        .in('listing_id', physicalListingIds)
+        .not('fulfillment_status', 'is', null)
+        .order('created_at', { ascending: false });
+      artistPhysicalSales = physSales ?? [];
+    }
   }
 
+  // Compras do utilizador autenticado (todos os roles)
+  const { data: purchases } = await admin
+    .from('sales')
+    .select('id, amount_eur, fulfillment_status, tracking_number, shipped_at, created_at, listing_id, listings(title, type, cover_image_url)')
+    .eq('buyer_email', user.email!)
+    .order('created_at', { ascending: false });
+  myPurchases = purchases ?? [];
+
   if (role === 'buyer') {
-    const { data: sales } = await admin
-      .from('sales')
-      .select('id, amount_eur, ong_amount_eur, created_at, listing_id, listings(title, type, cover_image_url)')
-      .eq('buyer_email', user.email!)
-      .order('created_at', { ascending: false });
-    buyerPurchases = sales ?? [];
-    buyerImpactEur = buyerPurchases.reduce((sum: number, s: any) => sum + Number(s.ong_amount_eur ?? 0), 0);
-    buyerTotalSpent = buyerPurchases.reduce((sum: number, s: any) => sum + Number(s.amount_eur ?? 0), 0);
+    buyerTotalSpent = myPurchases.reduce((sum: number, s: any) => sum + Number(s.amount_eur ?? 0), 0);
   }
 
   if (role === 'ong') {
@@ -221,6 +238,58 @@ export default async function DashboardPage() {
                 })}
               </div>
             )}
+            {/* Encomendas físicas para enviar */}
+            {artistPhysicalSales.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="font-semibold">Encomendas para enviar</h2>
+                {artistPhysicalSales.map((sale: any) => {
+                  const listing = sale.listings as any;
+                  const addr = sale.shipping_address as any;
+                  const statusLabel: Record<string, string> = {
+                    pending: 'Por enviar', processing: 'Em preparação',
+                    shipped: 'Enviado', delivered: 'Entregue',
+                  };
+                  const statusColor: Record<string, string> = {
+                    pending: 'bg-yellow-100 text-yellow-700',
+                    processing: 'bg-blue-100 text-blue-700',
+                    shipped: 'bg-blue-100 text-blue-700',
+                    delivered: 'bg-green-100 text-green-700',
+                  };
+                  return (
+                    <div key={sale.id} className="rounded-xl border bg-white dark:bg-zinc-900 p-4 space-y-3 text-sm">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{listing?.title ?? '—'}</p>
+                          <p className="text-muted-foreground text-xs mt-0.5">{sale.buyer_email} · €{Number(sale.amount_eur).toFixed(2)}</p>
+                          {addr && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {addr.name} · {addr.line1}, {addr.postal_code} {addr.city}, {addr.country}
+                            </p>
+                          )}
+                          {sale.tracking_number && (
+                            <p className="text-xs mt-1">Tracking: <span className="font-mono">{sale.tracking_number}</span></p>
+                          )}
+                        </div>
+                        <span className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${statusColor[sale.fulfillment_status] ?? 'bg-zinc-100 text-zinc-600'}`}>
+                          {statusLabel[sale.fulfillment_status] ?? sale.fulfillment_status}
+                        </span>
+                      </div>
+                      {sale.fulfillment_status === 'pending' || sale.fulfillment_status === 'processing' ? (
+                        <FulfillOrderButton saleId={sale.id} />
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* As minhas compras */}
+            {myPurchases.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="font-semibold">As minhas compras</h2>
+                <PurchaseListInline purchases={myPurchases} />
+              </div>
+            )}
           </div>
         );
       })()}
@@ -290,6 +359,14 @@ export default async function DashboardPage() {
               </div>
             </>
           )}
+
+          {/* As minhas compras (ONG como compradora) */}
+          {myPurchases.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="font-semibold">As minhas compras</h2>
+              <PurchaseListInline purchases={myPurchases} />
+            </div>
+          )}
         </div>
       )}
 
@@ -298,7 +375,7 @@ export default async function DashboardPage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl border bg-white dark:bg-zinc-900 p-4 text-center">
-              <p className="text-2xl font-bold">{buyerPurchases.length}</p>
+              <p className="text-2xl font-bold">{myPurchases.length}</p>
               <p className="text-xs text-muted-foreground mt-1">Obras na coleção</p>
             </div>
             <div className="rounded-xl border bg-white dark:bg-zinc-900 p-4 text-center">
@@ -317,7 +394,7 @@ export default async function DashboardPage() {
               Explorar marketplace →
             </Link>
           </div>
-          {buyerPurchases.length === 0 ? (
+          {myPurchases.length === 0 ? (
             <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground text-sm">
               Ainda não tens obras na tua coleção.{' '}
               <Link href="/marketplace" className="text-primary underline underline-offset-2">
@@ -325,35 +402,59 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
-              {buyerPurchases.map((sale: any) => {
-                const listing = sale.listings as any;
-                return (
-                  <Link key={sale.id} href={`/artworks/${sale.listing_id}`} className="rounded-xl border bg-white dark:bg-zinc-900 p-4 flex items-center gap-4 text-sm hover:border-zinc-400 transition-colors">
-                    {listing?.cover_image_url && (
-                      <ArtworkImage src={listing.cover_image_url} alt={listing.title ?? ''} />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{listing?.title ?? '—'}</p>
-                      <p className="text-muted-foreground">
-                        €{Number(sale.amount_eur).toFixed(2)} ·{' '}
-                        {listing?.type === 'digital' ? 'Digital' : listing?.type === 'physical' ? 'Física' : 'Ambas'}
-                      </p>
-                      {Number(sale.ong_amount_eur) > 0 && (
-                        <p className="text-green-600">€{Number(sale.ong_amount_eur).toFixed(2)} doados para causa</p>
-                      )}
-                    </div>
-                    <span className="shrink-0 text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">
-                      Confirmada
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
+            <PurchaseListInline purchases={myPurchases} />
           )}
         </div>
       )}
       </div>
+    </div>
+  );
+}
+
+function PurchaseListInline({ purchases }: { purchases: any[] }) {
+  const statusLabel: Record<string, string> = {
+    pending: 'Por enviar', processing: 'Em preparação',
+    shipped: 'Em trânsito', delivered: 'Entregue',
+  };
+  const statusColor: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-700',
+    processing: 'bg-blue-100 text-blue-700',
+    shipped: 'bg-blue-100 text-blue-700',
+    delivered: 'bg-green-100 text-green-700',
+  };
+  return (
+    <div className="space-y-3">
+      {purchases.map((sale: any) => {
+        const listing = sale.listings as any;
+        const isPhysical = listing?.type === 'physical' || listing?.type === 'both';
+        const status = sale.fulfillment_status;
+        return (
+          <Link key={sale.id} href={`/artworks/${sale.listing_id}`} className="rounded-xl border bg-white dark:bg-zinc-900 p-4 flex items-center gap-4 text-sm hover:border-zinc-400 transition-colors">
+            {listing?.cover_image_url && (
+              <ArtworkImage src={listing.cover_image_url} alt={listing.title ?? ''} />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-medium truncate">{listing?.title ?? '—'}</p>
+              <p className="text-muted-foreground">
+                €{Number(sale.amount_eur).toFixed(2)} ·{' '}
+                {listing?.type === 'digital' ? 'Digital' : listing?.type === 'physical' ? 'Física' : 'Ambas'}
+              </p>
+              {isPhysical && sale.tracking_number && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Tracking: <span className="font-mono">{sale.tracking_number}</span>
+                </p>
+              )}
+            </div>
+            <span className={`shrink-0 text-xs font-medium px-2 py-1 rounded-full ${
+              isPhysical && status
+                ? (statusColor[status] ?? 'bg-zinc-100 text-zinc-600')
+                : 'bg-green-100 text-green-700'
+            }`}>
+              {isPhysical && status ? (statusLabel[status] ?? status) : 'Confirmada'}
+            </span>
+          </Link>
+        );
+      })}
     </div>
   );
 }

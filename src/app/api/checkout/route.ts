@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const { listingId, buyerEmail } = await request.json();
+  const { listingId, buyerEmail, shippingAddress } = await request.json();
 
   if (!buyerEmail || !listingId) {
     return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
@@ -77,6 +77,7 @@ export async function POST(request: Request) {
     buyer_email: buyerEmail,
     amount_eur: Number(listing.price_eur),
     title: listing.title,
+    ...(shippingAddress ? { shipping_address: shippingAddress } : {}),
   }, { onConflict: 'crossmint_order_id' });
 
   return NextResponse.json({ orderId });

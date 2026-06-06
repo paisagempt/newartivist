@@ -142,7 +142,7 @@ export async function POST(request: Request) {
 
   const { data: pending, error: pendingError } = await admin
     .from('pending_orders')
-    .select('listing_id, buyer_email, amount_eur')
+    .select('listing_id, buyer_email, amount_eur, shipping_address')
     .eq('crossmint_order_id', orderId)
     .single();
 
@@ -169,12 +169,15 @@ export async function POST(request: Request) {
     .eq('id', listing.id);
 
   const amount = Number(pending.amount_eur ?? listing.price_eur);
+  const isPhysical = listing.type === 'physical' || listing.type === 'both';
   const { error: saleError } = await admin.from('sales').insert({
     listing_id: listing.id,
     buyer_email: pending.buyer_email,
     crossmint_order_id: orderId,
     amount_eur: amount,
     price_eur: amount,
+    ...(isPhysical && pending.shipping_address ? { shipping_address: pending.shipping_address } : {}),
+    fulfillment_status: isPhysical ? 'pending' : null,
   });
 
   // Buscar wallets para distribuição USDC
