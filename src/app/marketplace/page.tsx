@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
 import { ArtworkCard } from '@/components/artworks/artwork-card';
 import { NavHeader } from '@/components/layout/nav-header';
@@ -12,33 +13,41 @@ export default async function MarketplacePage() {
     .order('created_at', { ascending: false });
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="min-h-screen bg-background">
       <NavHeader />
 
-      {/* Hero */}
-      <section className="px-6 py-16 text-center max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold tracking-tight mb-4">Arte que gera impacto</h1>
-        <p className="text-muted-foreground text-lg">
-          Cada obra vendida distribui automaticamente uma parte para uma causa social. Compra arte, apoia o mundo.
-        </p>
+      {/* Header */}
+      <section className="px-6 py-16 border-b border-border">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em] mb-4">
+            Marketplace
+          </p>
+          <h1 className="text-4xl font-bold tracking-tight">Arte que gera impacto</h1>
+        </div>
       </section>
 
-      {/* Listagens */}
-      <main className="max-w-5xl mx-auto px-6 pb-16">
+      {/* Grid */}
+      <main className="max-w-5xl mx-auto px-6 py-12">
         {(!listings || listings.length === 0) ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <p className="text-lg">Ainda não há obras disponíveis.</p>
-            <p className="text-sm mt-2">Sê o primeiro artista a publicar.</p>
-            <Link href="/register" className="mt-4 inline-block text-sm font-medium text-primary underline underline-offset-2">
-              Criar conta como artista
+          <div className="py-24 text-center space-y-3">
+            <p className="text-muted-foreground">Ainda não há obras disponíveis.</p>
+            <Link
+              href="/register"
+              className="text-sm font-medium underline underline-offset-4 hover:text-muted-foreground transition-colors"
+            >
+              Sê o primeiro artista a publicar
             </Link>
           </div>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-6">{listings.length} {listings.length === 1 ? 'obra disponível' : 'obras disponíveis'}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <p className="text-xs text-muted-foreground mb-8 uppercase tracking-widest">
+              {listings.length} {listings.length === 1 ? 'obra' : 'obras'}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
               {listings.map(listing => (
-                <ArtworkCard key={listing.id} listing={listing as any} />
+                <div key={listing.id} className="bg-background">
+                  <ArtworkCard listing={listing as any} />
+                </div>
               ))}
             </div>
           </>

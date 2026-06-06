@@ -33,77 +33,101 @@ export default async function ArtworkPage({
   const purchased = purchasedParam === 'true';
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="min-h-screen bg-background">
       <NavHeader backLink={{ href: '/marketplace', label: 'Marketplace' }} />
 
-      <main className="max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-5xl mx-auto px-6 py-12">
+
+        {/* Confirmação de compra */}
         {purchased && (
-          <div className="mb-8 rounded-xl bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-5 text-center space-y-3">
-            <p className="font-semibold text-green-800 dark:text-green-200">Compra concluída!</p>
-            <p className="text-sm text-green-700 dark:text-green-300">
-              {listing.type === 'digital' ? 'A tua arte digital foi' : 'O teu certificado digital foi'} entregue no teu email. Obrigado por apoiares a arte com impacto.
+          <div className="mb-12 border border-border bg-card p-8 space-y-4">
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">Compra concluída</p>
+            <p className="font-semibold">
+              {listing.type === 'digital' ? 'A tua arte digital foi entregue no teu email.' : 'O teu certificado digital foi enviado para o teu email.'}
             </p>
+            <p className="text-sm text-muted-foreground">Obrigado por apoiares a arte com impacto.</p>
             <a
               href="https://staging.crossmint.com/user/collection"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-green-800 dark:bg-green-200 text-white dark:text-green-900 text-sm font-medium px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+              className="inline-flex items-center bg-foreground text-background text-sm font-medium px-6 py-3 hover:bg-foreground/85 transition-colors"
             >
               Ver na minha wallet →
             </a>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {/* Imagem */}
-          <div className="rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 aspect-square">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+          {/* Imagem — sem border-radius, bleed */}
+          <div className="bg-muted overflow-hidden aspect-square">
             {listing.cover_image_url ? (
-              <img src={listing.cover_image_url} alt={listing.title} className="w-full h-full object-cover" />
+              <img
+                src={listing.cover_image_url}
+                alt={listing.title}
+                className="w-full h-full object-cover"
+              />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">Sem imagem</div>
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs uppercase tracking-widest">
+                Sem imagem
+              </div>
             )}
           </div>
 
           {/* Info */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-8 py-2">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                {listing.type === 'digital' ? 'Arte digital' : 'Arte física'} · {available === 1 && listing.edition_size === 1 ? 'Obra única (1/1)' : `${available} de ${listing.edition_size} disponíveis`}
+              <p className="text-xs text-muted-foreground uppercase tracking-[0.15em] mb-3">
+                {listing.type === 'digital' ? 'Arte digital' : 'Arte física'} ·{' '}
+                {available === 1 && listing.edition_size === 1
+                  ? 'Obra única (1/1)'
+                  : `${available} de ${listing.edition_size} disponíveis`}
               </p>
-              <h1 className="text-3xl font-bold">{listing.title}</h1>
+              <h1 className="text-3xl font-bold leading-tight">{listing.title}</h1>
               {listing.description && (
-                <p className="text-muted-foreground mt-3 leading-relaxed">{listing.description}</p>
+                <p className="text-sm text-muted-foreground mt-4 leading-relaxed">{listing.description}</p>
               )}
             </div>
 
-            {/* Split */}
-            <div className="rounded-xl bg-white dark:bg-zinc-900 border p-5 space-y-3 text-sm">
-              <p className="font-semibold">Distribuição de €{price.toFixed(2)}</p>
-              <div className="space-y-2">
-                <div className="flex justify-between">
+            {/* Distribuição */}
+            <div className="border border-border bg-card">
+              <div className="px-5 py-4 border-b border-border">
+                <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
+                  Distribuição de €{price.toFixed(2)}
+                </p>
+              </div>
+              <div className="divide-y divide-border">
+                <div className="px-5 py-3 flex justify-between text-sm">
                   <span>Artista</span>
-                  <span className="font-medium text-green-600">€{(price * artistPercentage / 100).toFixed(2)} ({artistPercentage}%)</span>
+                  <span className="font-medium">€{(price * artistPercentage / 100).toFixed(2)} <span className="text-muted-foreground font-normal">({artistPercentage}%)</span></span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-blue-600">{listing.ongs?.name ?? 'ONG'}</span>
-                  <span className="font-medium text-blue-600">€{(price * listing.ong_percentage / 100).toFixed(2)} ({listing.ong_percentage}%)</span>
+                <div className="px-5 py-3 flex justify-between text-sm">
+                  <span>{listing.ongs?.name ?? 'ONG'}</span>
+                  <span className="font-medium">€{(price * listing.ong_percentage / 100).toFixed(2)} <span className="text-muted-foreground font-normal">({listing.ong_percentage}%)</span></span>
                 </div>
-                <div className="flex justify-between text-muted-foreground">
+                <div className="px-5 py-3 flex justify-between text-sm text-muted-foreground">
                   <span>Plataforma Artivist</span>
                   <span>€{(price * PLATFORM_FEE / 100).toFixed(2)} ({PLATFORM_FEE}%)</span>
                 </div>
               </div>
               {listing.ongs?.mission && (
-                <p className="text-xs text-muted-foreground border-t pt-3 mt-3">{listing.ongs.mission}</p>
+                <div className="px-5 py-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground leading-relaxed">{listing.ongs.mission}</p>
+                </div>
               )}
             </div>
 
             {/* Preço + comprar */}
-            <div className="space-y-3">
-              <p className="text-3xl font-bold">€{price.toFixed(2)}</p>
-              <BuyButton listingId={id} price={price} available={available} type={listing.type} userEmail={user?.email ?? null} />
+            <div className="space-y-4">
+              <p className="text-4xl font-bold">€{price.toFixed(2)}</p>
+              <BuyButton
+                listingId={id}
+                price={price}
+                available={available}
+                type={listing.type}
+                userEmail={user?.email ?? null}
+              />
               {listing.status === 'active' && available > 0 && (
-                <p className="text-xs text-center text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Pagamento em euros · {listing.type === 'digital' ? 'Arte digital' : 'Certificado digital'} entregue automaticamente · Seguro por blockchain
                 </p>
               )}

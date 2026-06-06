@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 type Props = {
   saleId: string;
@@ -66,25 +65,28 @@ export function OrderActions({ saleId, fulfillmentStatus, canOpenDispute, daysUn
   return (
     <section className="space-y-3">
       {fulfillmentStatus === 'shipped' && (
-        <Button
-          className="w-full"
+        <button
+          className="w-full bg-foreground text-background py-3 text-sm font-medium uppercase tracking-widest hover:bg-foreground/85 transition-colors disabled:opacity-30"
           onClick={handleConfirmDelivery}
           disabled={loading !== null}
         >
-          {loading === 'confirm' && <Loader2 className="mr-2 size-4 animate-spin" />}
-          Confirmar recebimento
-        </Button>
+          {loading === 'confirm' ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="size-3 animate-spin" />
+              A confirmar...
+            </span>
+          ) : 'Confirmar recebimento'}
+        </button>
       )}
 
       {canOpenDispute && !disputeStep && (
-        <Button
-          variant="outline"
-          className="w-full border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+        <button
+          className="w-full border border-border py-3 text-sm font-medium uppercase tracking-widest text-muted-foreground hover:border-foreground hover:text-foreground transition-colors disabled:opacity-30"
           onClick={() => setDisputeStep(true)}
           disabled={loading !== null}
         >
           Abrir disputa
-        </Button>
+        </button>
       )}
 
       {!canOpenDispute && !disputeOpened && daysUntilDispute > 0 && (
@@ -94,28 +96,31 @@ export function OrderActions({ saleId, fulfillmentStatus, canOpenDispute, daysUn
       )}
 
       {disputeStep && (
-        <div className="rounded-xl border border-red-200 dark:border-red-800 p-4 space-y-3">
-          <p className="text-sm font-medium">Descreve o problema</p>
+        <div className="border border-border bg-card p-5 space-y-4">
+          <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">Descreve o problema</p>
           <textarea
             value={reason}
             onChange={e => setReason(e.target.value)}
             placeholder="Ex: Passaram 20 dias e não recebi a encomenda..."
             rows={3}
-            className="w-full border rounded-xl px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-foreground resize-none"
+            className="w-full border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-foreground transition-colors resize-none placeholder:text-muted-foreground"
           />
           <div className="flex gap-2">
-            <Button
-              variant="destructive"
-              className="flex-1"
+            <button
+              className="flex-1 flex items-center justify-center gap-2 bg-destructive text-white py-2.5 text-xs font-medium uppercase tracking-widest hover:bg-destructive/90 transition-colors disabled:opacity-30"
               onClick={handleDispute}
               disabled={!reason.trim() || loading !== null}
             >
-              {loading === 'dispute' && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {loading === 'dispute' && <Loader2 className="size-3 animate-spin" />}
               Confirmar disputa
-            </Button>
-            <Button variant="outline" onClick={() => setDisputeStep(false)} disabled={loading !== null}>
+            </button>
+            <button
+              className="px-4 border border-border py-2.5 text-xs font-medium uppercase tracking-widest hover:bg-muted transition-colors disabled:opacity-30"
+              onClick={() => setDisputeStep(false)}
+              disabled={loading !== null}
+            >
               Cancelar
-            </Button>
+            </button>
           </div>
         </div>
       )}

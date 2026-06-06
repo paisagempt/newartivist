@@ -22,6 +22,9 @@ type Address = {
 
 const emptyAddress: Address = { name: '', line1: '', city: '', postal_code: '', country: '' };
 
+const inputClass =
+  'w-full border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground';
+
 export function BuyButton({ listingId, price, available, type, userEmail }: Props) {
   const isPhysical = type === 'physical' || type === 'both';
   const artLabel = type === 'digital' ? 'arte digital' : 'certificado digital';
@@ -66,7 +69,10 @@ export function BuyButton({ listingId, price, available, type, userEmail }: Prop
 
   if (available <= 0) {
     return (
-      <button disabled className="w-full bg-muted text-muted-foreground py-3 rounded-xl font-medium cursor-not-allowed">
+      <button
+        disabled
+        className="w-full bg-muted text-muted-foreground py-3 text-sm font-medium cursor-not-allowed uppercase tracking-widest"
+      >
         Esgotado
       </button>
     );
@@ -76,7 +82,7 @@ export function BuyButton({ listingId, price, available, type, userEmail }: Prop
     return (
       <button
         onClick={() => setStep('email')}
-        className="w-full bg-foreground text-background py-3 rounded-xl font-medium hover:opacity-90 transition-opacity"
+        className="w-full bg-foreground text-background py-3 text-sm font-medium hover:bg-foreground/85 transition-colors uppercase tracking-widest"
       >
         Comprar obra
       </button>
@@ -86,31 +92,38 @@ export function BuyButton({ listingId, price, available, type, userEmail }: Prop
   if (step === 'email') {
     const locked = !!userEmail;
     return (
-      <div className="space-y-3">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Email para receber a {artLabel}</label>
-          <input
-            type="email"
-            value={email}
-            onChange={e => !locked && setEmail(e.target.value)}
-            placeholder="o-teu@email.com"
-            autoFocus={!locked}
-            readOnly={locked}
-            className={`w-full border rounded-xl px-4 py-3 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-foreground ${locked ? 'opacity-70 cursor-default' : ''}`}
-            onKeyDown={e => e.key === 'Enter' && email && (isPhysical ? setStep('address') : handleCheckout())}
-          />
-          <p className="text-xs text-muted-foreground">
-            {locked ? 'Email da tua conta.' : isPhysical ? 'O recibo e certificado digital serão enviados para este email.' : `A ${artLabel} e o recibo serão enviados para este endereço.`}
-          </p>
-        </div>
+      <div className="space-y-3 border border-border p-5 bg-card">
+        <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground mb-4">
+          Email para receber a {artLabel}
+        </p>
+        <input
+          type="email"
+          value={email}
+          onChange={e => !locked && setEmail(e.target.value)}
+          placeholder="o-teu@email.com"
+          autoFocus={!locked}
+          readOnly={locked}
+          className={`${inputClass} ${locked ? 'opacity-60 cursor-default bg-muted' : ''}`}
+          onKeyDown={e => e.key === 'Enter' && email && (isPhysical ? setStep('address') : handleCheckout())}
+        />
+        <p className="text-xs text-muted-foreground">
+          {locked
+            ? 'Email da tua conta.'
+            : isPhysical
+            ? 'O recibo e certificado digital serão enviados para este email.'
+            : `A ${artLabel} e o recibo serão enviados para este endereço.`}
+        </p>
         <button
           onClick={() => isPhysical ? setStep('address') : handleCheckout()}
           disabled={!email}
-          className="w-full bg-foreground text-background py-3 rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="w-full bg-foreground text-background py-3 text-sm font-medium hover:bg-foreground/85 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
           {isPhysical ? 'Continuar →' : 'Continuar para pagamento'}
         </button>
-        <button onClick={() => setStep('idle')} className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          onClick={() => setStep('idle')}
+          className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+        >
           Cancelar
         </button>
       </div>
@@ -119,24 +132,26 @@ export function BuyButton({ listingId, price, available, type, userEmail }: Prop
 
   if (step === 'address') {
     return (
-      <div className="space-y-3">
-        <p className="text-sm font-medium">Morada de entrega</p>
+      <div className="space-y-4 border border-border p-5 bg-card">
+        <p className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
+          Morada de entrega
+        </p>
         <div className="space-y-2">
           {([
-            { field: 'name', label: 'Nome completo', placeholder: 'Ana Silva', type: 'text' },
-            { field: 'line1', label: 'Morada', placeholder: 'Rua das Flores, 12', type: 'text' },
-            { field: 'city', label: 'Cidade', placeholder: 'Lisboa', type: 'text' },
-            { field: 'postal_code', label: 'Código postal', placeholder: '1000-001', type: 'text' },
-            { field: 'country', label: 'País', placeholder: 'Portugal', type: 'text' },
+            { field: 'name', label: 'Nome completo', placeholder: 'Ana Silva' },
+            { field: 'line1', label: 'Morada', placeholder: 'Rua das Flores, 12' },
+            { field: 'city', label: 'Cidade', placeholder: 'Lisboa' },
+            { field: 'postal_code', label: 'Código postal', placeholder: '1000-001' },
+            { field: 'country', label: 'País', placeholder: 'Portugal' },
           ] as const).map(({ field, label, placeholder }) => (
-            <div key={field} className="space-y-1">
-              <label className="text-xs text-muted-foreground">{label}</label>
+            <div key={field}>
+              <label className="block text-xs text-muted-foreground mb-1">{label}</label>
               <input
                 type="text"
                 value={address[field]}
                 onChange={e => setAddr(field, e.target.value)}
                 placeholder={placeholder}
-                className="w-full border rounded-xl px-4 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-foreground"
+                className={inputClass}
               />
             </div>
           ))}
@@ -144,11 +159,14 @@ export function BuyButton({ listingId, price, available, type, userEmail }: Prop
         <button
           onClick={handleCheckout}
           disabled={!addressValid()}
-          className="w-full bg-foreground text-background py-3 rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="w-full bg-foreground text-background py-3 text-sm font-medium hover:bg-foreground/85 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
           Continuar para pagamento
         </button>
-        <button onClick={() => setStep('email')} className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          onClick={() => setStep('email')}
+          className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+        >
           ← Voltar
         </button>
       </div>
@@ -156,7 +174,10 @@ export function BuyButton({ listingId, price, available, type, userEmail }: Prop
   }
 
   return (
-    <button disabled className="w-full bg-foreground text-background py-3 rounded-xl font-medium opacity-50 cursor-not-allowed">
+    <button
+      disabled
+      className="w-full bg-foreground text-background py-3 text-sm font-medium opacity-50 cursor-not-allowed"
+    >
       A criar ordem...
     </button>
   );

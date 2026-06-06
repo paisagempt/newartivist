@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export function FulfillOrderButton({ saleId }: { saleId: string }) {
   const router = useRouter();
@@ -34,37 +33,50 @@ export function FulfillOrderButton({ saleId }: { saleId: string }) {
 
   if (!open) {
     return (
-      <Button onClick={() => setOpen(true)} className="w-full">
+      <button
+        onClick={() => setOpen(true)}
+        className="w-full border border-border bg-background py-2.5 text-xs font-medium uppercase tracking-widest hover:bg-muted hover:border-foreground transition-colors"
+      >
         Registar envio
-      </Button>
+      </button>
     );
   }
 
   return (
-    <div className="border rounded-xl p-4 space-y-3 bg-zinc-50 dark:bg-zinc-800">
-      <div className="space-y-1">
-        <label className="text-sm font-medium">Código de rastreio</label>
+    <div className="border border-border bg-background p-4 space-y-3">
+      <div className="space-y-1.5">
+        <label className="block text-xs text-muted-foreground uppercase tracking-[0.15em]">
+          Código de rastreio
+        </label>
         <input
           type="text"
           value={tracking}
           onChange={e => setTracking(e.target.value)}
           placeholder="Ex: PT123456789PT"
           autoFocus
-          className="w-full border rounded-lg px-3 py-2.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-foreground font-mono"
+          className="w-full border border-border bg-background px-3 py-2.5 text-sm font-mono outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground"
           onKeyDown={e => e.key === 'Enter' && handleShip()}
         />
         <p className="text-xs text-muted-foreground">
-          Opcional mas recomendado — o comprador poderá acompanhar o envio.
+          Opcional — o comprador poderá acompanhar o envio.
         </p>
       </div>
       <div className="flex gap-2">
-        <Button onClick={handleShip} disabled={loading} className="flex-1">
-          {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
+        <button
+          onClick={handleShip}
+          disabled={loading}
+          className="flex-1 flex items-center justify-center gap-2 bg-foreground text-background py-2.5 text-xs font-medium uppercase tracking-widest hover:bg-foreground/85 transition-colors disabled:opacity-30"
+        >
+          {loading && <Loader2 className="size-3 animate-spin" />}
           Confirmar envio
-        </Button>
-        <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+        </button>
+        <button
+          onClick={() => setOpen(false)}
+          disabled={loading}
+          className="px-4 border border-border py-2.5 text-xs font-medium uppercase tracking-widest hover:bg-muted transition-colors disabled:opacity-30"
+        >
           Cancelar
-        </Button>
+        </button>
       </div>
     </div>
   );

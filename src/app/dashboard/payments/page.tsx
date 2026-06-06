@@ -40,72 +40,82 @@ export default async function PaymentsPage({
     .order('sent_at', { ascending: false })
     .limit(10);
 
-  const totalPendingEur = (pendingDists ?? []).reduce((s, d) => s + Number(d.amount_eur), 0);
+  const totalPendingEur = pendingDists.reduce((s, d) => s + Number(d.amount_eur), 0);
+  const totalHeldEur = heldDists.reduce((s, d) => s + Number(d.amount_eur), 0);
 
   const { stripe: stripeParam } = await searchParams;
-
-  // Verificar se o Stripe Connect foi concluído
-  let stripeConnected = !!profile?.stripe_account_id;
+  const stripeConnected = !!profile?.stripe_account_id;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="min-h-screen bg-background">
       <NavHeader />
-      <main className="max-w-2xl mx-auto px-6 py-10 space-y-8">
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">← Dashboard</Link>
+      <main className="max-w-2xl mx-auto px-6 py-10 space-y-10">
+
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm">
+          <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+            ← Dashboard
+          </Link>
         </div>
-        <h1 className="text-2xl font-bold">Pagamentos</h1>
+
+        <div className="pb-6 border-b border-border">
+          <p className="text-xs text-muted-foreground uppercase tracking-[0.2em] mb-1">Conta</p>
+          <h1 className="text-2xl font-bold">Pagamentos</h1>
+        </div>
 
         {stripeParam === 'success' && (
-          <div className="rounded-xl bg-green-50 border border-green-200 p-4 text-sm text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-300">
-            Conta bancária ligada com sucesso!
+          <div className="border border-border bg-card px-5 py-4 text-sm">
+            Conta bancária ligada com sucesso.
           </div>
         )}
 
-        {/* Saldo pendente */}
-        <section className="rounded-2xl border bg-white dark:bg-zinc-900 p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Saldo disponível</p>
-              <p className="text-3xl font-bold mt-1">€{totalPendingEur.toFixed(2)}</p>
-            </div>
+        {/* Saldo disponível */}
+        <section className="border border-border bg-card">
+          <div className="px-6 py-5 border-b border-border">
+            <p className="text-xs text-muted-foreground uppercase tracking-[0.15em]">Saldo disponível</p>
+            <p className="text-4xl font-bold mt-2">€{totalPendingEur.toFixed(2)}</p>
           </div>
-
-          {(pendingDists ?? []).length > 0 && (
-            <div className="space-y-2 pt-2 border-t">
-              {pendingDists!.map(d => (
-                <div key={d.id} className="flex justify-between text-sm">
+          {pendingDists.length > 0 && (
+            <div className="divide-y divide-border">
+              {pendingDists.map(d => (
+                <div key={d.id} className="px-6 py-3 flex justify-between text-sm">
                   <span className="text-muted-foreground">{new Date(d.created_at).toLocaleDateString('pt-PT')}</span>
                   <span className="font-medium">€{Number(d.amount_eur).toFixed(2)}</span>
                 </div>
               ))}
             </div>
           )}
-
-          {(pendingDists ?? []).length === 0 && (
-            <p className="text-sm text-muted-foreground">Sem vendas pendentes.</p>
+          {pendingDists.length === 0 && (
+            <div className="px-6 py-4 text-sm text-muted-foreground">
+              Sem saldo disponível.
+            </div>
           )}
         </section>
 
-        {/* Valores em espera (obras físicas) */}
+        {/* A aguardar entrega */}
         {heldDists.length > 0 && (
-          <section className="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800 p-6 space-y-4">
-            <div>
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">A aguardar confirmação de entrega</p>
-              <p className="text-3xl font-bold mt-1 text-amber-900 dark:text-amber-100">
-                €{heldDists.reduce((s, d) => s + Number(d.amount_eur), 0).toFixed(2)}
-              </p>
-              <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                Libertado automaticamente 20 dias após envio, ou quando o comprador confirmar a entrega.
-              </p>
+          <section className="border border-amber-300 dark:border-amber-700 bg-card">
+            <div className="px-6 py-5 border-b border-amber-300 dark:border-amber-700 flex items-center gap-3">
+              <span className="w-2 h-2 bg-amber-500 animate-pulse shrink-0" />
+              <div>
+                <p className="text-xs text-amber-700 dark:text-amber-300 uppercase tracking-[0.15em]">
+                  A aguardar confirmação de entrega
+                </p>
+                <p className="text-4xl font-bold mt-2">€{totalHeldEur.toFixed(2)}</p>
+              </div>
             </div>
-            <div className="space-y-2 pt-2 border-t border-amber-200 dark:border-amber-800">
+            <div className="divide-y divide-amber-200 dark:divide-amber-800">
               {heldDists.map(d => (
-                <div key={d.id} className="flex justify-between text-sm text-amber-800 dark:text-amber-200">
-                  <span className="text-amber-600 dark:text-amber-400">{new Date(d.created_at).toLocaleDateString('pt-PT')}</span>
+                <div key={d.id} className="px-6 py-3 flex justify-between text-sm">
+                  <span className="text-muted-foreground">{new Date(d.created_at).toLocaleDateString('pt-PT')}</span>
                   <span className="font-medium">€{Number(d.amount_eur).toFixed(2)}</span>
                 </div>
               ))}
+            </div>
+            <div className="px-6 py-4 border-t border-amber-200 dark:border-amber-800">
+              <p className="text-xs text-muted-foreground">
+                Libertado quando o comprador confirmar a entrega, ou automaticamente 20 dias após envio.
+              </p>
             </div>
           </section>
         )}
@@ -120,18 +130,24 @@ export default async function PaymentsPage({
         {/* Histórico */}
         {(sentDists ?? []).length > 0 && (
           <section className="space-y-3">
-            <h2 className="text-base font-semibold">Histórico de pagamentos</h2>
-            {sentDists!.map(d => (
-              <div key={d.id} className="flex justify-between items-center rounded-xl border bg-white dark:bg-zinc-900 px-4 py-3 text-sm">
-                <div>
-                  <p className="font-medium">€{Number(d.amount_eur).toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(d.sent_at).toLocaleDateString('pt-PT')}</p>
+            <h2 className="text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
+              Histórico de pagamentos
+            </h2>
+            <div className="divide-y divide-border border border-border bg-card">
+              {sentDists!.map(d => (
+                <div key={d.id} className="px-5 py-3 flex justify-between items-center text-sm">
+                  <div>
+                    <p className="font-medium">€{Number(d.amount_eur).toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(d.sent_at).toLocaleDateString('pt-PT')}</p>
+                  </div>
+                  {d.tx_signature && (
+                    <span className="text-xs text-muted-foreground font-mono truncate max-w-[120px]">
+                      {d.tx_signature.slice(0, 12)}…
+                    </span>
+                  )}
                 </div>
-                {d.tx_signature && (
-                  <span className="text-xs text-muted-foreground font-mono truncate max-w-[120px]">{d.tx_signature.slice(0, 12)}…</span>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </section>
         )}
       </main>
