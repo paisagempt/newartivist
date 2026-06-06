@@ -9,6 +9,7 @@ type Props = {
   price: number;
   available: number;
   type: 'digital' | 'physical' | 'both';
+  userEmail: string | null;
 };
 
 type Address = {
@@ -21,12 +22,12 @@ type Address = {
 
 const emptyAddress: Address = { name: '', line1: '', city: '', postal_code: '', country: '' };
 
-export function BuyButton({ listingId, price, available, type }: Props) {
+export function BuyButton({ listingId, price, available, type, userEmail }: Props) {
   const isPhysical = type === 'physical' || type === 'both';
   const artLabel = type === 'digital' ? 'arte digital' : 'certificado digital';
   const router = useRouter();
   const [step, setStep] = useState<'idle' | 'email' | 'address' | 'loading'>('idle');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(userEmail ?? '');
   const [address, setAddress] = useState<Address>(emptyAddress);
 
   function setAddr(field: keyof Address, value: string) {
@@ -83,6 +84,7 @@ export function BuyButton({ listingId, price, available, type }: Props) {
   }
 
   if (step === 'email') {
+    const locked = !!userEmail;
     return (
       <div className="space-y-3">
         <div className="space-y-1.5">
@@ -90,14 +92,15 @@ export function BuyButton({ listingId, price, available, type }: Props) {
           <input
             type="email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={e => !locked && setEmail(e.target.value)}
             placeholder="o-teu@email.com"
-            autoFocus
-            className="w-full border rounded-xl px-4 py-3 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-foreground"
+            autoFocus={!locked}
+            readOnly={locked}
+            className={`w-full border rounded-xl px-4 py-3 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-foreground ${locked ? 'opacity-70 cursor-default' : ''}`}
             onKeyDown={e => e.key === 'Enter' && email && (isPhysical ? setStep('address') : handleCheckout())}
           />
           <p className="text-xs text-muted-foreground">
-            {isPhysical ? 'O recibo e certificado digital serão enviados para este email.' : `A ${artLabel} e o recibo serão enviados para este endereço.`}
+            {locked ? 'Email da tua conta.' : isPhysical ? 'O recibo e certificado digital serão enviados para este email.' : `A ${artLabel} e o recibo serão enviados para este endereço.`}
           </p>
         </div>
         <button

@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { BuyButton } from '@/components/artworks/buy-button';
@@ -14,6 +14,8 @@ export default async function ArtworkPage({
   const { id } = await params;
   const { purchased: purchasedParam } = await searchParams;
 
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const admin = createAdminClient();
 
   const { data: listing } = await admin
@@ -99,7 +101,7 @@ export default async function ArtworkPage({
             {/* Preço + comprar */}
             <div className="space-y-3">
               <p className="text-3xl font-bold">€{price.toFixed(2)}</p>
-              <BuyButton listingId={id} price={price} available={available} type={listing.type} />
+              <BuyButton listingId={id} price={price} available={available} type={listing.type} userEmail={user?.email ?? null} />
               {listing.status === 'active' && available > 0 && (
                 <p className="text-xs text-center text-muted-foreground">
                   Pagamento em euros · {listing.type === 'digital' ? 'Arte digital' : 'Certificado digital'} entregue automaticamente · Seguro por blockchain

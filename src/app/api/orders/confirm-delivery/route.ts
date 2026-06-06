@@ -6,41 +6,37 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
 
-  const { saleId, trackingNumber } = await request.json();
+  const { saleId } = await request.json();
   if (!saleId) return NextResponse.json({ error: 'saleId obrigatório' }, { status: 400 });
 
   const admin = createAdminClient();
 
   const { data: sale } = await admin
     .from('sales')
-    .select('id, listing_id, crossmint_order_id, listings(artist_id, artists(user_id))')
+    .select('id, buyer_email, crossmint_order_id, fulfillment_status')
     .eq('id', saleId)
     .single();
 
-  const artistUserId = (sale?.listings as any)?.artists?.user_id;
-  if (!sale || artistUserId !== user.id) {
+  if (!sale || sale.buyer_email !== user.email) {
     return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
   }
 
-  const shippedAt = new Date();
-  const holdReleaseAt = new Date(shippedAt.getTime() + 20 * 24 * 60 * 60 * 1000);
+  if (sale.fulfillment_status !== 'shipped') {
+    return NextResponse.json({ error: 'Encomenda ainda não foi enviada.' }, { status: 400 });
+  }
 
   const { error: saleError } = await admin
     .from('sales')
-    .update({
-      fulfillment_status: 'shipped',
-      tracking_number: trackingNumber ?? null,
-      shipped_at: shippedAt.toISOString(),
-    })
+    .update({ fulfillment_status: 'delivered', delivered_at: new Date().toISOString() })
     .eq('id', saleId);
 
   if (saleError) return NextResponse.json({ error: saleError.message }, { status: 500 });
 
-  // Após 20 dias sem disputa, o repasse é libertado automaticamente
+  // Libertar distribuições imediatamente
   if (sale.crossmint_order_id) {
     await admin
       .from('distributions')
-      .update({ hold_release_at: holdReleaseAt.toISOString() })
+      .update({ on_hold: false, hold_release_at: null })
       .eq('crossmint_order_id', sale.crossmint_order_id)
       .eq('on_hold', true);
   }

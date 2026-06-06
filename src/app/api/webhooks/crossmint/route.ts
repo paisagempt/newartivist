@@ -29,6 +29,7 @@ async function recordDistributions({
   ongUserId,
   artistShare,
   ongShare,
+  isPhysical,
 }: {
   crossmintOrderId: string;
   listingId: string;
@@ -39,6 +40,7 @@ async function recordDistributions({
   ongUserId: string | null;
   artistShare: number;
   ongShare: number;
+  isPhysical: boolean;
 }) {
   const admin = createAdminClient();
   const totalUsdc = await eurToUsdc(amountEur);
@@ -53,6 +55,7 @@ async function recordDistributions({
       user_id: artistUserId,
       amount_eur: Number(((amountEur * artistShare) / 100).toFixed(2)),
       amount_usdc: Number(((totalUsdc * artistShare) / 100).toFixed(6)),
+      on_hold: isPhysical,
     });
   }
 
@@ -65,6 +68,7 @@ async function recordDistributions({
       user_id: ongUserId,
       amount_eur: Number(((amountEur * ongShare) / 100).toFixed(2)),
       amount_usdc: Number(((totalUsdc * ongShare) / 100).toFixed(6)),
+      on_hold: isPhysical,
     });
   }
 
@@ -354,6 +358,7 @@ export async function POST(request: Request) {
     ongUserId,
     artistShare: artistPct,
     ongShare: ongPct,
+    isPhysical,
   });
 
   flushPendingDistributions().catch(err => console.error('[webhook] flush error:', err));

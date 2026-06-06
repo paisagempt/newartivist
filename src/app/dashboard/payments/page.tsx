@@ -22,12 +22,18 @@ export default async function PaymentsPage({
 
   if (!['artist', 'ong'].includes(profile?.role ?? '')) redirect('/dashboard');
 
-  const { data: pendingDists } = await admin
+  const now = new Date().toISOString();
+  const { data: allPending } = await admin
     .from('distributions')
-    .select('id, amount_eur, amount_usdc, recipient_type, created_at')
+    .select('id, amount_eur, amount_usdc, recipient_type, created_at, on_hold, hold_release_at')
     .eq('status', 'pending')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
+
+  // Excluir distribuições em hold que ainda não passaram o prazo de libertação automática
+  const pendingDists = (allPending ?? []).filter(d =>
+    !d.on_hold || (d.hold_release_at && d.hold_release_at <= now)
+  );
 
   const { data: sentDists } = await admin
     .from('distributions')

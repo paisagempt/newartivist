@@ -428,8 +428,9 @@ function PurchaseListInline({ purchases }: { purchases: any[] }) {
         const listing = sale.listings as any;
         const isPhysical = listing?.type === 'physical' || listing?.type === 'both';
         const status = sale.fulfillment_status;
+        const href = isPhysical ? `/dashboard/orders/${sale.id}` : `/artworks/${sale.listing_id}`;
         return (
-          <Link key={sale.id} href={`/artworks/${sale.listing_id}`} className="rounded-xl border bg-white dark:bg-zinc-900 p-4 flex items-center gap-4 text-sm hover:border-zinc-400 transition-colors">
+          <Link key={sale.id} href={href} className="rounded-xl border bg-white dark:bg-zinc-900 p-4 flex items-center gap-4 text-sm hover:border-zinc-400 transition-colors">
             {listing?.cover_image_url && (
               <ArtworkImage src={listing.cover_image_url} alt={listing.title ?? ''} />
             )}
