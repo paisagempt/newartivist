@@ -1,19 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
-import {
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
-  createTransferInstruction,
-} from '@solana/spl-token';
-import nacl from 'tweetnacl';
+import { flushPendingDistributions } from '@/lib/solana-distributions';
 
-// Circle devnet USDC mint
-const USDC_MINT = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
-const SOLANA_RPC = 'https://api.devnet.solana.com';
-const TREASURY_LOCATOR = 'email:artivist-treasury@artivist.art:solana-smart-wallet';
-const TREASURY_ADMIN_PUBKEY = 'H88qAHiuKZHZeMP4tM86qogp48UFyvuNkGz7R5ow91Ak';
 const PLATFORM_FEE = 10; // %
 
 async function eurToUsdc(eurAmount: number): Promise<number> {
@@ -30,114 +19,59 @@ async function eurToUsdc(eurAmount: number): Promise<number> {
   }
 }
 
-async function distributeUsdc({
+async function recordDistributions({
+  crossmintOrderId,
+  listingId,
   amountEur,
   artistWallet,
   ongWallet,
   artistShare,
   ongShare,
 }: {
+  crossmintOrderId: string;
+  listingId: string;
   amountEur: number;
   artistWallet: string | null;
   ongWallet: string | null;
   artistShare: number;
   ongShare: number;
 }) {
-  const keypairHex = process.env.ARTIVIST_TREASURY_KEYPAIR_HEX;
-  const treasuryAddress = process.env.ARTIVIST_TREASURY_WALLET;
-
-  if (!keypairHex || !treasuryAddress) {
-    console.error('[webhook] treasury env vars not set — skipping USDC distribution');
-    return { ok: false, error: 'treasury env vars not set' };
-  }
-
+  const admin = createAdminClient();
   const totalUsdc = await eurToUsdc(amountEur);
-  const recipients: { wallet: string; usdc: number }[] = [];
+  const rows = [];
 
   if (artistWallet && artistShare > 0) {
-    recipients.push({ wallet: artistWallet, usdc: Number(((totalUsdc * artistShare) / 100).toFixed(6)) });
+    rows.push({
+      crossmint_order_id: crossmintOrderId,
+      listing_id: listingId,
+      recipient_type: 'artist',
+      wallet_address: artistWallet,
+      amount_eur: Number(((amountEur * artistShare) / 100).toFixed(2)),
+      amount_usdc: Number(((totalUsdc * artistShare) / 100).toFixed(6)),
+    });
   }
+
   if (ongWallet && ongShare > 0) {
-    recipients.push({ wallet: ongWallet, usdc: Number(((totalUsdc * ongShare) / 100).toFixed(6)) });
+    rows.push({
+      crossmint_order_id: crossmintOrderId,
+      listing_id: listingId,
+      recipient_type: 'ong',
+      wallet_address: ongWallet,
+      amount_eur: Number(((amountEur * ongShare) / 100).toFixed(2)),
+      amount_usdc: Number(((totalUsdc * ongShare) / 100).toFixed(6)),
+    });
   }
 
-  if (recipients.length === 0) {
-    console.log('[webhook] no USDC recipients — skipping');
-    return { ok: true, skipped: true };
+  if (rows.length === 0) {
+    console.log('[webhook] no distributions to record');
+    return;
   }
 
-  console.log(`[webhook] distributing ${totalUsdc} USDC from €${amountEur} to`, recipients);
-
-  try {
-    const connection = new Connection(SOLANA_RPC, 'confirmed');
-    const adminKeypair = Keypair.fromSecretKey(Buffer.from(keypairHex, 'hex'));
-    const treasuryPubkey = new PublicKey(treasuryAddress);
-    const fromATA = await getAssociatedTokenAddress(USDC_MINT, treasuryPubkey);
-    const { blockhash } = await connection.getLatestBlockhash();
-
-    const tx = new Transaction({ recentBlockhash: blockhash, feePayer: treasuryPubkey });
-
-    for (const { wallet, usdc } of recipients) {
-      const toPubkey = new PublicKey(wallet);
-      const toATA = await getAssociatedTokenAddress(USDC_MINT, toPubkey);
-
-      const toATAInfo = await connection.getAccountInfo(toATA);
-      if (!toATAInfo) {
-        tx.add(createAssociatedTokenAccountInstruction(
-          treasuryPubkey, toATA, toPubkey, USDC_MINT
-        ));
-      }
-
-      tx.add(createTransferInstruction(
-        fromATA, toATA, treasuryPubkey,
-        Math.round(usdc * 1_000_000) // USDC = 6 decimals
-      ));
-    }
-
-    const serialized = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
-    const base64Tx = Buffer.from(serialized).toString('base64');
-
-    // Submit to Crossmint smart wallet
-    const createRes = await fetch(
-      `https://staging.crossmint.com/api/v1-alpha2/wallets/${encodeURIComponent(TREASURY_LOCATOR)}/transactions`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-API-KEY': process.env.CROSSMINT_SERVER_KEY! },
-        body: JSON.stringify({
-          params: { transaction: base64Tx },
-          signer: `solana-keypair:${TREASURY_ADMIN_PUBKEY}`,
-        }),
-      }
-    );
-    const createData = await createRes.json();
-    console.log('[webhook] usdc tx create:', JSON.stringify(createData));
-
-    if (createData.status === 'awaiting-approval' && createData.id) {
-      const txBuffer = Buffer.from(createData.serializedTransaction ?? base64Tx, 'base64');
-      const txObj = Transaction.from(txBuffer);
-      const messageBytes = txObj.serializeMessage();
-      const sigBytes = nacl.sign.detached(messageBytes, adminKeypair.secretKey);
-      const sigBase64 = Buffer.from(sigBytes).toString('base64');
-
-      const approveRes = await fetch(
-        `https://staging.crossmint.com/api/v1-alpha2/wallets/${encodeURIComponent(TREASURY_LOCATOR)}/transactions/${createData.id}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'X-API-KEY': process.env.CROSSMINT_SERVER_KEY! },
-          body: JSON.stringify({
-            approvals: [{ signer: `solana-keypair:${TREASURY_ADMIN_PUBKEY}`, signature: sigBase64 }],
-          }),
-        }
-      );
-      const approveData = await approveRes.json();
-      console.log('[webhook] usdc tx approve:', JSON.stringify(approveData));
-      return { ok: true, txId: createData.id, approveStatus: approveData.status };
-    }
-
-    return { ok: true, txId: createData.id, status: createData.status };
-  } catch (err: any) {
-    console.error('[webhook] USDC distribution error:', err);
-    return { ok: false, error: err.message };
+  const { error } = await admin.from('distributions').insert(rows);
+  if (error) {
+    console.error('[webhook] error recording distributions:', error.message);
+  } else {
+    console.log('[webhook] distributions recorded:', rows.map(r => `${r.recipient_type} €${r.amount_eur}`).join(', '));
   }
 }
 
@@ -153,7 +87,8 @@ export async function POST(request: Request) {
   const isComplete =
     eventType === 'orders.payment.succeeded' ||
     eventType === 'order.completed' ||
-    eventType === 'orders.completed';
+    eventType === 'orders.completed' ||
+    eventType === 'orders.delivery.completed';
 
   if (!isComplete) {
     return NextResponse.json({ ok: true, skipped: eventType });
@@ -395,14 +330,18 @@ export async function POST(request: Request) {
     }
   }
 
-  // Distribuir USDC em background (não bloqueia a resposta ao Crossmint)
-  distributeUsdc({
+  // Registar distribuições e tentar enviar imediatamente se a treasury tiver saldo
+  await recordDistributions({
+    crossmintOrderId: orderId,
+    listingId: listing.id,
     amountEur: amount,
     artistWallet,
     ongWallet,
     artistShare: artistPct,
     ongShare: ongPct,
-  }).catch(err => console.error('[webhook] USDC distribution error:', err));
+  });
+
+  flushPendingDistributions().catch(err => console.error('[webhook] flush error:', err));
 
   return NextResponse.json({
     ok: true,
