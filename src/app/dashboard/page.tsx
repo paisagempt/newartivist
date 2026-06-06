@@ -140,6 +140,9 @@ export default async function DashboardPage() {
           const share = 100 - PLATFORM_FEE - Number(l.ong_percentage ?? 0);
           return sum + Number(l.price_eur) * l.editions_sold * share / 100;
         }, 0);
+        const ongDonated = artistListings.reduce((sum: number, l: any) => {
+          return sum + Number(l.price_eur) * l.editions_sold * Number(l.ong_percentage ?? 0) / 100;
+        }, 0);
         const activeListings = artistListings.filter((l: any) => l.status === 'active').length;
         return (
           <div className="space-y-6">
@@ -150,7 +153,7 @@ export default async function DashboardPage() {
                 <p className="text-xs text-muted-foreground mt-1">Os meus ganhos</p>
               </div>
               <div className="rounded-xl border bg-white dark:bg-zinc-900 p-4 text-center">
-                <p className="text-2xl font-bold text-green-600">€{Number(artistProfile.total_raised_eur).toFixed(0)}</p>
+                <p className="text-2xl font-bold text-green-600">€{ongDonated.toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground mt-1">Doado a causas</p>
               </div>
               <div className="rounded-xl border bg-white dark:bg-zinc-900 p-4 text-center">
