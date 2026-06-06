@@ -22,7 +22,6 @@ export default async function PaymentsPage({
 
   if (!['artist', 'ong'].includes(profile?.role ?? '')) redirect('/dashboard');
 
-  const now = new Date().toISOString();
   const { data: allPending } = await admin
     .from('distributions')
     .select('id, amount_eur, amount_usdc, recipient_type, created_at, on_hold, hold_release_at')
@@ -30,10 +29,8 @@ export default async function PaymentsPage({
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  // Excluir distribuições em hold que ainda não passaram o prazo de libertação automática
-  const pendingDists = (allPending ?? []).filter(d =>
-    !d.on_hold || (d.hold_release_at && d.hold_release_at <= now)
-  );
+  const pendingDists = (allPending ?? []).filter(d => !d.on_hold);
+  const heldDists = (allPending ?? []).filter(d => d.on_hold);
 
   const { data: sentDists } = await admin
     .from('distributions')
@@ -89,6 +86,29 @@ export default async function PaymentsPage({
             <p className="text-sm text-muted-foreground">Sem vendas pendentes.</p>
           )}
         </section>
+
+        {/* Valores em espera (obras físicas) */}
+        {heldDists.length > 0 && (
+          <section className="rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800 p-6 space-y-4">
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">A aguardar confirmação de entrega</p>
+              <p className="text-3xl font-bold mt-1 text-amber-900 dark:text-amber-100">
+                €{heldDists.reduce((s, d) => s + Number(d.amount_eur), 0).toFixed(2)}
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                Libertado automaticamente 20 dias após envio, ou quando o comprador confirmar a entrega.
+              </p>
+            </div>
+            <div className="space-y-2 pt-2 border-t border-amber-200 dark:border-amber-800">
+              {heldDists.map(d => (
+                <div key={d.id} className="flex justify-between text-sm text-amber-800 dark:text-amber-200">
+                  <span className="text-amber-600 dark:text-amber-400">{new Date(d.created_at).toLocaleDateString('pt-PT')}</span>
+                  <span className="font-medium">€{Number(d.amount_eur).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Configurações de levantamento */}
         <PaymentSettings
