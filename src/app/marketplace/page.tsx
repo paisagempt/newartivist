@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { ArtworkCard } from '@/components/artworks/artwork-card';
-import Link from 'next/link';
+import { NavHeader } from '@/components/layout/nav-header';
 
 export default async function MarketplacePage() {
   const admin = createAdminClient();
@@ -13,16 +13,7 @@ export default async function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      {/* Header */}
-      <header className="border-b bg-white dark:bg-zinc-900 px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-tight">Artivist</Link>
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">Entrar</Link>
-          <Link href="/register" className="text-sm font-medium bg-foreground text-background px-4 py-2 rounded-full hover:opacity-90 transition-opacity">
-            Criar conta
-          </Link>
-        </div>
-      </header>
+      <NavHeader />
 
       {/* Hero */}
       <section className="px-6 py-16 text-center max-w-2xl mx-auto">

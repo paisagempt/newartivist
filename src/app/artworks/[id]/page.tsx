@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { BuyButton } from '@/components/artworks/buy-button';
+import { NavHeader } from '@/components/layout/nav-header';
 
 export default async function ArtworkPage({
   params,
@@ -31,18 +32,23 @@ export default async function ArtworkPage({
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <header className="border-b bg-white dark:bg-zinc-900 px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-tight">Artivist</Link>
-        <Link href="/marketplace" className="text-sm text-muted-foreground hover:text-foreground">← Marketplace</Link>
-      </header>
+      <NavHeader backLink={{ href: '/marketplace', label: 'Marketplace' }} />
 
       <main className="max-w-4xl mx-auto px-6 py-12">
         {purchased && (
-          <div className="mb-8 rounded-xl bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-5 text-center">
+          <div className="mb-8 rounded-xl bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 p-5 text-center space-y-3">
             <p className="font-semibold text-green-800 dark:text-green-200">Compra concluída!</p>
-            <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+            <p className="text-sm text-green-700 dark:text-green-300">
               {listing.type === 'digital' ? 'A tua arte digital foi' : 'O teu certificado digital foi'} entregue no teu email. Obrigado por apoiares a arte com impacto.
             </p>
+            <a
+              href="https://staging.crossmint.com/user/collection"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-green-800 dark:bg-green-200 text-white dark:text-green-900 text-sm font-medium px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Ver na minha wallet →
+            </a>
           </div>
         )}
 
