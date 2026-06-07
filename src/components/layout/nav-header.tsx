@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { LogoutButton } from '@/components/logout-button';
+import { LanguageSwitcher } from '@/components/layout/language-switcher';
 
 export async function NavHeader({ backLink }: { backLink?: { href: string; label: string } }) {
   const supabase = await createClient();
@@ -23,6 +24,7 @@ export async function NavHeader({ backLink }: { backLink?: { href: string; label
         )}
       </div>
       <div className="flex items-center gap-6">
+        <LanguageSwitcher />
         {user ? (
           <>
             <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">

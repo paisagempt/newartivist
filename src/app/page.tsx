@@ -43,24 +43,24 @@ export default async function HomePage() {
           <p className="text-base text-muted-foreground mb-10 max-w-md leading-relaxed">
             Cada obra vendida distribui automaticamente uma parte para uma causa social — verificado na blockchain Solana.
           </p>
-          <div className="flex flex-col gap-2 w-fit">
+          <div className="flex flex-col gap-2 max-w-sm">
             <div className="flex gap-2">
               <Link
                 href="/register?role=artist"
-                className="flex-1 inline-flex items-center justify-center border border-border px-6 py-3 text-sm font-medium hover:border-foreground hover:bg-muted transition-colors"
+                className="flex-1 inline-flex items-center justify-center whitespace-nowrap border border-border px-6 py-3 text-sm font-medium hover:border-foreground hover:bg-muted transition-colors"
               >
                 Sou artista →
               </Link>
               <Link
                 href="/register?role=ong"
-                className="flex-1 inline-flex items-center justify-center border border-border px-6 py-3 text-sm font-medium hover:border-foreground hover:bg-muted transition-colors"
+                className="flex-1 inline-flex items-center justify-center whitespace-nowrap border border-border px-6 py-3 text-sm font-medium hover:border-foreground hover:bg-muted transition-colors"
               >
                 Sou ONG →
               </Link>
             </div>
             <Link
               href="/marketplace"
-              className="inline-flex items-center justify-center bg-foreground text-background px-8 py-3 text-sm font-medium hover:bg-foreground/85 transition-colors w-full"
+              className="inline-flex items-center justify-center bg-foreground text-background py-3 text-sm font-medium hover:bg-foreground/85 transition-colors w-full"
             >
               Explorar obras
             </Link>
