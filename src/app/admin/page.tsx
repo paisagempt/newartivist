@@ -48,7 +48,12 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen p-8 max-w-4xl mx-auto space-y-12">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Admin</h1>
+        <div>
+          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest">
+            ← Início
+          </Link>
+          <h1 className="text-2xl font-bold mt-2">Admin</h1>
+        </div>
         <LogoutButton />
       </div>
 

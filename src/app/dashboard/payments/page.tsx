@@ -48,7 +48,7 @@ export default async function PaymentsPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader />
+      <NavHeader backLink={{ href: '/dashboard', label: 'Dashboard' }} />
       <main className="max-w-2xl mx-auto px-6 py-10 space-y-10">
 
         {/* Breadcrumb */}

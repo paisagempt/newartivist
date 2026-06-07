@@ -14,7 +14,7 @@ export default async function ArtistProfilePage({
 
   const { data: artist } = await admin
     .from('artists')
-    .select('id, name, bio, portfolio_url, total_raised_eur')
+    .select('id, name, bio, portfolio_url, avatar_url, total_raised_eur')
     .eq('id', id)
     .single();
 
@@ -40,7 +40,14 @@ export default async function ArtistProfilePage({
         {/* Header */}
         <div className="border-b border-border pb-10 space-y-6">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em]">Artista</p>
-          <h1 className="text-4xl font-bold">{displayName}</h1>
+          <div className="flex items-center gap-6">
+            {artist.avatar_url && (
+              <div className="w-20 h-20 overflow-hidden shrink-0 bg-muted">
+                <img src={artist.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <h1 className="text-4xl font-bold">{displayName}</h1>
+          </div>
 
           {artist.bio && (
             <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">{artist.bio}</p>

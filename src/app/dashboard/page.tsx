@@ -62,7 +62,7 @@ export default async function DashboardPage() {
   if (role === 'artist') {
     const { data } = await admin
       .from('artists')
-      .select('id, name, bio, portfolio_url, total_raised_eur')
+      .select('id, name, bio, portfolio_url, avatar_url, total_raised_eur')
       .eq('user_id', user.id)
       .single();
     if (!data) redirect('/onboarding');
@@ -248,9 +248,11 @@ export default async function DashboardPage() {
                       Ver perfil público →
                     </Link>
                     <EditArtistProfile
+                      artistId={artistProfile.id}
                       name={artistProfile.name ?? null}
                       bio={artistProfile.bio ?? null}
                       portfolioUrl={artistProfile.portfolio_url ?? null}
+                      avatarUrl={artistProfile.avatar_url ?? null}
                     />
                   </div>
                 </div>
