@@ -14,9 +14,10 @@ export async function POST(request: Request) {
   const { role } = body;
 
   if (role === 'artist') {
-    const { bio, portfolio_url } = body;
+    const { name, bio, portfolio_url } = body;
     const { error } = await admin.from('artists').upsert({
       user_id: user.id,
+      name: name ?? null,
       bio: bio ?? null,
       portfolio_url: portfolio_url ?? null,
       verified: true,

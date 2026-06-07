@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { sendOrderShippedEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
 
   const { data: sale } = await admin
     .from('sales')
-    .select('id, listing_id, crossmint_order_id, listings(artist_id, artists(user_id))')
+    .select('id, buyer_email, listing_id, crossmint_order_id, listings(title, artist_id, artists(user_id))')
     .eq('id', saleId)
     .single();
 
@@ -43,6 +44,16 @@ export async function POST(request: Request) {
       .update({ hold_release_at: holdReleaseAt.toISOString() })
       .eq('crossmint_order_id', sale.crossmint_order_id)
       .eq('on_hold', true);
+  }
+
+  // Email ao comprador
+  if (sale.buyer_email) {
+    sendOrderShippedEmail({
+      to: sale.buyer_email,
+      listingTitle: (sale.listings as any)?.title ?? 'Obra',
+      trackingNumber: trackingNumber ?? null,
+      saleId,
+    }).catch(() => {});
   }
 
   return NextResponse.json({ ok: true });

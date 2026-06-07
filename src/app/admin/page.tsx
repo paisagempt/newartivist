@@ -4,6 +4,7 @@ import { LogoutButton } from '@/components/logout-button';
 import { ApproveOngButton } from '@/components/admin/approve-ong-button';
 import { FlushDistributionsButton } from '@/components/admin/flush-distributions-button';
 import { FixDistributionsButton } from '@/components/admin/fix-distributions-button';
+import { ResolveDisputeButtons } from '@/components/admin/resolve-dispute-buttons';
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -20,7 +21,7 @@ export default async function AdminPage() {
 
   if (profile?.role !== 'admin') redirect('/dashboard');
 
-  const [{ data: pendingOngs }, { data: distributions }] = await Promise.all([
+  const [{ data: pendingOngs }, { data: distributions }, { data: openDisputes }] = await Promise.all([
     admin
       .from('ongs')
       .select('id, name, mission, registration_number, country, verified, created_at')
@@ -31,6 +32,12 @@ export default async function AdminPage() {
       .select('id, recipient_type, wallet_address, amount_eur, amount_usdc, status, created_at, listings(title)')
       .order('created_at', { ascending: false })
       .limit(100),
+    admin
+      .from('sales')
+      .select('id, buyer_email, amount_eur, dispute_opened_at, dispute_reason, dispute_resolved_at, dispute_resolution, listings(title)')
+      .not('dispute_opened_at', 'is', null)
+      .is('dispute_resolved_at', null)
+      .order('dispute_opened_at', { ascending: true }),
   ]);
 
   const pending = distributions?.filter(d => d.status === 'pending') ?? [];
@@ -117,6 +124,44 @@ export default async function AdminPage() {
               ))}
             </div>
           </details>
+        )}
+      </section>
+
+      {/* Disputas abertas */}
+      <section>
+        <h2 className="text-lg font-semibold mb-4">
+          Disputas abertas
+          {openDisputes && openDisputes.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">({openDisputes.length})</span>
+          )}
+        </h2>
+        {(!openDisputes || openDisputes.length === 0) ? (
+          <div className="border border-dashed p-8 text-center text-muted-foreground text-sm">
+            Sem disputas abertas.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {openDisputes.map(sale => (
+              <div key={sale.id} className="border p-5 space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1 min-w-0">
+                    <p className="font-semibold text-sm">{(sale.listings as any)?.title ?? '—'}</p>
+                    <p className="text-sm text-muted-foreground">{sale.buyer_email} · €{Number(sale.amount_eur).toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Aberta em {new Date(sale.dispute_opened_at).toLocaleDateString('pt-PT')}
+                    </p>
+                  </div>
+                  <ResolveDisputeButtons saleId={sale.id} />
+                </div>
+                {sale.dispute_reason && (
+                  <div className="bg-muted/40 p-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Motivo: </span>
+                    {sale.dispute_reason}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </section>
 

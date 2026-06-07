@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { ArtworkImage } from '@/components/artworks/artwork-image';
 import { NavHeader } from '@/components/layout/nav-header';
 import { FulfillOrderButton } from '@/components/dashboard/fulfill-order-button';
+import { EditArtistProfile } from '@/components/dashboard/edit-artist-profile';
+import { EditOngProfile } from '@/components/dashboard/edit-ong-profile';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -60,7 +62,7 @@ export default async function DashboardPage() {
   if (role === 'artist') {
     const { data } = await admin
       .from('artists')
-      .select('id, bio, portfolio_url, total_raised_eur')
+      .select('id, name, bio, portfolio_url, total_raised_eur')
       .eq('user_id', user.id)
       .single();
     if (!data) redirect('/onboarding');
@@ -234,30 +236,55 @@ export default async function DashboardPage() {
               </div>
 
               {/* Perfil */}
-              <div className="border border-border divide-y divide-border text-sm">
-                <div className="px-4 py-3 flex gap-4">
-                  <span className="text-muted-foreground w-24 shrink-0">Email</span>
-                  <span>{user.email}</span>
-                </div>
-                {artistProfile.bio && (
-                  <div className="px-4 py-3 flex gap-4">
-                    <span className="text-muted-foreground w-24 shrink-0">Bio</span>
-                    <span>{artistProfile.bio}</span>
-                  </div>
-                )}
-                {artistProfile.portfolio_url && (
-                  <div className="px-4 py-3 flex gap-4">
-                    <span className="text-muted-foreground w-24 shrink-0">Portfólio</span>
-                    <a
-                      href={artistProfile.portfolio_url}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium uppercase tracking-[0.15em]">Perfil</p>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/artistas/${artistProfile.id}`}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
                       target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline underline-offset-2 hover:text-muted-foreground transition-colors truncate"
                     >
-                      {artistProfile.portfolio_url}
-                    </a>
+                      Ver perfil público →
+                    </Link>
+                    <EditArtistProfile
+                      name={artistProfile.name ?? null}
+                      bio={artistProfile.bio ?? null}
+                      portfolioUrl={artistProfile.portfolio_url ?? null}
+                    />
                   </div>
-                )}
+                </div>
+                <div className="border border-border divide-y divide-border text-sm">
+                  <div className="px-4 py-3 flex gap-4">
+                    <span className="text-muted-foreground w-24 shrink-0">Email</span>
+                    <span>{user.email}</span>
+                  </div>
+                  {artistProfile.name && (
+                    <div className="px-4 py-3 flex gap-4">
+                      <span className="text-muted-foreground w-24 shrink-0">Nome</span>
+                      <span>{artistProfile.name}</span>
+                    </div>
+                  )}
+                  {artistProfile.bio && (
+                    <div className="px-4 py-3 flex gap-4">
+                      <span className="text-muted-foreground w-24 shrink-0">Bio</span>
+                      <span>{artistProfile.bio}</span>
+                    </div>
+                  )}
+                  {artistProfile.portfolio_url && (
+                    <div className="px-4 py-3 flex gap-4">
+                      <span className="text-muted-foreground w-24 shrink-0">Portfólio</span>
+                      <a
+                        href={artistProfile.portfolio_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline underline-offset-2 hover:text-muted-foreground transition-colors truncate"
+                      >
+                        {artistProfile.portfolio_url}
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Obras */}
@@ -367,22 +394,28 @@ export default async function DashboardPage() {
             </div>
 
             {/* Perfil */}
-            <div className="border border-border divide-y divide-border text-sm">
-              {[
-                { label: 'Organização', value: ongProfile.name },
-                { label: 'Email', value: user.email },
-                ongProfile.mission && { label: 'Missão', value: ongProfile.mission },
-                { label: 'Nº de registo', value: ongProfile.registration_number },
-                { label: 'País', value: ongProfile.country },
-                { label: 'Estado', value: ongProfile.verified ? 'Verificada' : 'A aguardar verificação', highlight: true },
-              ].filter(Boolean).map((row: any) => (
-                <div key={row.label} className="px-4 py-3 flex gap-4">
-                  <span className="text-muted-foreground w-28 shrink-0">{row.label}</span>
-                  <span className={row.highlight ? (ongProfile.verified ? 'font-medium' : 'text-muted-foreground') : ''}>
-                    {row.value}
-                  </span>
-                </div>
-              ))}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium uppercase tracking-[0.15em]">Perfil</p>
+                <EditOngProfile mission={ongProfile.mission ?? null} />
+              </div>
+              <div className="border border-border divide-y divide-border text-sm">
+                {[
+                  { label: 'Organização', value: ongProfile.name },
+                  { label: 'Email', value: user.email },
+                  ongProfile.mission && { label: 'Missão', value: ongProfile.mission },
+                  { label: 'Nº de registo', value: ongProfile.registration_number },
+                  { label: 'País', value: ongProfile.country },
+                  { label: 'Estado', value: ongProfile.verified ? 'Verificada' : 'A aguardar verificação', highlight: true },
+                ].filter(Boolean).map((row: any) => (
+                  <div key={row.label} className="px-4 py-3 flex gap-4">
+                    <span className="text-muted-foreground w-28 shrink-0">{row.label}</span>
+                    <span className={row.highlight ? (ongProfile.verified ? 'font-medium' : 'text-muted-foreground') : ''}>
+                      {row.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Obras associadas */}

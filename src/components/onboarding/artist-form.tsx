@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 
 export function ArtistForm() {
   const router = useRouter();
+  const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +23,7 @@ export function ArtistForm() {
       const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'artist', bio, portfolio_url: portfolioUrl }),
+        body: JSON.stringify({ role: 'artist', name, bio, portfolio_url: portfolioUrl }),
       });
       if (!res.ok) throw new Error('Erro ao guardar perfil.');
       toast.success('Perfil criado!');
@@ -42,6 +43,16 @@ export function ArtistForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="name">Nome artístico</Label>
+            <Input
+              id="name"
+              placeholder="O teu nome ou pseudónimo"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+            />
+          </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="bio">Bio</Label>
             <textarea

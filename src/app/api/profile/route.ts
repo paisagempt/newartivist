@@ -23,10 +23,10 @@ export async function PATCH(request: Request) {
   }
 
   if (profile?.role === 'artist') {
-    const { bio, portfolio_url } = body;
+    const { name, bio, portfolio_url } = body;
     const { error } = await admin
       .from('artists')
-      .update({ bio, portfolio_url })
+      .update({ name, bio, portfolio_url })
       .eq('user_id', user.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });

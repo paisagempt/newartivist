@@ -2,15 +2,40 @@ import Link from 'next/link';
 import { createAdminClient } from '@/lib/supabase/server';
 import { ArtworkCard } from '@/components/artworks/artwork-card';
 import { NavHeader } from '@/components/layout/nav-header';
+import { MarketplaceFilters } from '@/components/marketplace/filters';
+import { Suspense } from 'react';
 
-export default async function MarketplacePage() {
+export default async function MarketplacePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; type?: string; sort?: string }>;
+}) {
+  const { q, type, sort } = await searchParams;
   const admin = createAdminClient();
 
-  const { data: listings } = await admin
+  let query = admin
     .from('listings')
     .select('id, title, type, price_eur, edition_size, editions_sold, ong_percentage, cover_image_url, ongs(name)')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false });
+    .eq('status', 'active');
+
+  if (q?.trim()) {
+    query = query.ilike('title', `%${q.trim()}%`);
+  }
+
+  if (type === 'digital' || type === 'physical') {
+    query = query.eq('type', type);
+  }
+
+  if (sort === 'price_asc') {
+    query = query.order('price_eur', { ascending: true });
+  } else if (sort === 'price_desc') {
+    query = query.order('price_eur', { ascending: false });
+  } else {
+    query = query.order('created_at', { ascending: false });
+  }
+
+  const { data: listings } = await query;
+  const hasFilters = !!(q || type || sort);
 
   return (
     <div className="min-h-screen bg-background">
@@ -26,21 +51,37 @@ export default async function MarketplacePage() {
         </div>
       </section>
 
-      {/* Grid */}
-      <main className="max-w-5xl mx-auto px-6 py-12">
+      <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
+        {/* Filters */}
+        <Suspense>
+          <MarketplaceFilters />
+        </Suspense>
+
+        {/* Results */}
         {(!listings || listings.length === 0) ? (
           <div className="py-24 text-center space-y-3">
-            <p className="text-muted-foreground">Ainda não há obras disponíveis.</p>
-            <Link
-              href="/register"
-              className="text-sm font-medium underline underline-offset-4 hover:text-muted-foreground transition-colors"
-            >
-              Sê o primeiro artista a publicar
-            </Link>
+            <p className="text-muted-foreground">
+              {hasFilters ? 'Nenhuma obra encontrada.' : 'Ainda não há obras disponíveis.'}
+            </p>
+            {hasFilters ? (
+              <Link
+                href="/marketplace"
+                className="text-sm font-medium underline underline-offset-4 hover:text-muted-foreground transition-colors"
+              >
+                Limpar filtros
+              </Link>
+            ) : (
+              <Link
+                href="/register"
+                className="text-sm font-medium underline underline-offset-4 hover:text-muted-foreground transition-colors"
+              >
+                Sê o primeiro artista a publicar
+              </Link>
+            )}
           </div>
         ) : (
           <>
-            <p className="text-xs text-muted-foreground mb-8 uppercase tracking-widest">
+            <p className="text-xs text-muted-foreground uppercase tracking-widest">
               {listings.length} {listings.length === 1 ? 'obra' : 'obras'}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border">

@@ -20,7 +20,7 @@ export default async function ArtworkPage({
 
   const { data: listing } = await admin
     .from('listings')
-    .select('*, ongs(name, mission)')
+    .select('*, ongs(name, mission), artists(id, name)')
     .eq('id', id)
     .single();
 
@@ -83,6 +83,14 @@ export default async function ArtworkPage({
                   : `${available} de ${listing.edition_size} disponíveis`}
               </p>
               <h1 className="text-3xl font-bold leading-tight">{listing.title}</h1>
+              {(listing.artists as any)?.id && (
+                <Link
+                  href={`/artistas/${(listing.artists as any).id}`}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors mt-2 inline-block"
+                >
+                  {(listing.artists as any)?.name ?? 'Ver artista'} →
+                </Link>
+              )}
               {listing.description && (
                 <p className="text-sm text-muted-foreground mt-4 leading-relaxed">{listing.description}</p>
               )}

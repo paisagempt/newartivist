@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { sendDeliveryConfirmedEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -13,7 +14,7 @@ export async function POST(request: Request) {
 
   const { data: sale } = await admin
     .from('sales')
-    .select('id, buyer_email, crossmint_order_id, fulfillment_status')
+    .select('id, buyer_email, amount_eur, crossmint_order_id, fulfillment_status, listings(title, artist_id, artists(user_id))')
     .eq('id', saleId)
     .single();
 
@@ -39,6 +40,21 @@ export async function POST(request: Request) {
       .update({ on_hold: false, hold_release_at: null })
       .eq('crossmint_order_id', sale.crossmint_order_id)
       .eq('on_hold', true);
+  }
+
+  // Email ao artista
+  const artistUserId = (sale.listings as any)?.artists?.user_id;
+  if (artistUserId) {
+    admin.auth.admin.getUserById(artistUserId).then(({ data }) => {
+      const artistEmail = data.user?.email;
+      if (artistEmail) {
+        sendDeliveryConfirmedEmail({
+          to: artistEmail,
+          listingTitle: (sale.listings as any)?.title ?? 'Obra',
+          amountEur: Number(sale.amount_eur ?? 0),
+        }).catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   return NextResponse.json({ ok: true });
