@@ -8,8 +8,7 @@ export async function getLang(): Promise<Lang> {
   return lang === 'en' || lang === 'es' ? lang : 'pt';
 }
 
-export const dict = {
-  pt: {
+const pt = {
     nav: {
       marketplace: 'Marketplace',
       dashboard: 'Dashboard',
@@ -96,9 +95,11 @@ export const dict = {
       empty: 'Este artista ainda não tem obras publicadas.',
       explore: 'Explora o marketplace',
     },
-  },
+};
 
-  en: {
+type DictShape = typeof pt;
+
+const en: DictShape = {
     nav: {
       marketplace: 'Marketplace',
       dashboard: 'Dashboard',
@@ -185,9 +186,9 @@ export const dict = {
       empty: 'This artist has no published works yet.',
       explore: 'Explore the marketplace',
     },
-  },
+};
 
-  es: {
+const es: DictShape = {
     nav: {
       marketplace: 'Marketplace',
       dashboard: 'Panel',
@@ -274,5 +275,6 @@ export const dict = {
       empty: 'Este artista aún no tiene obras publicadas.',
       explore: 'Explora el marketplace',
     },
-  },
-} satisfies Record<Lang, typeof dict['pt']>;
+};
+
+export const dict: Record<Lang, DictShape> = { pt, en, es };

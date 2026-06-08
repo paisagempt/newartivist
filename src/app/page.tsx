@@ -88,7 +88,7 @@ export default async function HomePage() {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground mb-12">{t.how_title}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
-            {t.steps.map(step => (
+            {t.steps.map((step: { n: string; title: string; desc: string }) => (
               <div key={step.n} className="space-y-4">
                 <p className="text-3xl font-bold text-border">{step.n}</p>
                 <h3 className="text-sm font-semibold">{step.title}</h3>

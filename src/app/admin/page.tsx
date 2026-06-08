@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { LogoutButton } from '@/components/logout-button';
 import { ApproveOngButton } from '@/components/admin/approve-ong-button';
 import { FlushDistributionsButton } from '@/components/admin/flush-distributions-button';
