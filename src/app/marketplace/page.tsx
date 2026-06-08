@@ -4,6 +4,7 @@ import { ArtworkCard } from '@/components/artworks/artwork-card';
 import { NavHeader } from '@/components/layout/nav-header';
 import { MarketplaceFilters } from '@/components/marketplace/filters';
 import { Suspense } from 'react';
+import { getLang, dict } from '@/lib/i18n';
 
 export default async function MarketplacePage({
   searchParams,
@@ -11,6 +12,8 @@ export default async function MarketplacePage({
   searchParams: Promise<{ q?: string; type?: string; sort?: string }>;
 }) {
   const { q, type, sort } = await searchParams;
+  const lang = await getLang();
+  const t = dict[lang].marketplace;
   const admin = createAdminClient();
 
   let query = admin
@@ -45,44 +48,44 @@ export default async function MarketplacePage({
       <section className="px-6 py-16 border-b border-border">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em] mb-4">
-            Marketplace
+            {t.tag}
           </p>
-          <h1 className="text-4xl font-bold tracking-tight">Arte que gera impacto</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{t.h1}</h1>
         </div>
       </section>
 
       <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
         {/* Filters */}
         <Suspense>
-          <MarketplaceFilters />
+          <MarketplaceFilters t={t} />
         </Suspense>
 
         {/* Results */}
         {(!listings || listings.length === 0) ? (
           <div className="py-24 text-center space-y-3">
             <p className="text-muted-foreground">
-              {hasFilters ? 'Nenhuma obra encontrada.' : 'Ainda não há obras disponíveis.'}
+              {hasFilters ? t.empty_filters : t.empty}
             </p>
             {hasFilters ? (
               <Link
                 href="/marketplace"
                 className="text-sm font-medium underline underline-offset-4 hover:text-muted-foreground transition-colors"
               >
-                Limpar filtros
+                {t.clear_filters}
               </Link>
             ) : (
               <Link
                 href="/register"
                 className="text-sm font-medium underline underline-offset-4 hover:text-muted-foreground transition-colors"
               >
-                Sê o primeiro artista a publicar
+                {t.first_artist}
               </Link>
             )}
           </div>
         ) : (
           <>
             <p className="text-xs text-muted-foreground uppercase tracking-widest">
-              {listings.length} {listings.length === 1 ? 'obra' : 'obras'}
+              {t.works(listings.length)}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
               {listings.map(listing => (

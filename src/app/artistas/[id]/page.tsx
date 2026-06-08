@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { NavHeader } from '@/components/layout/nav-header';
 import { ArtworkCard } from '@/components/artworks/artwork-card';
+import { getLang, dict } from '@/lib/i18n';
 
 export default async function ArtistProfilePage({
   params,
@@ -10,6 +11,8 @@ export default async function ArtistProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const lang = await getLang();
+  const t = dict[lang].artist;
   const admin = createAdminClient();
 
   const { data: artist } = await admin
@@ -39,7 +42,7 @@ export default async function ArtistProfilePage({
 
         {/* Header */}
         <div className="border-b border-border pb-10 space-y-6">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em]">Artista</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em]">{t.tag}</p>
           <div className="flex items-center gap-6">
             {artist.avatar_url && (
               <div className="w-20 h-20 overflow-hidden shrink-0 bg-muted">
@@ -58,15 +61,15 @@ export default async function ArtistProfilePage({
             <div className="flex divide-x divide-border border border-border">
               <div className="px-6 py-3 text-center">
                 <p className="text-lg font-bold">€{Number(artist.total_raised_eur ?? 0).toFixed(0)}</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">Para ONGs</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">{t.stat_ongs}</p>
               </div>
               <div className="px-6 py-3 text-center">
                 <p className="text-lg font-bold">{totalSold}</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">Vendidas</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">{t.stat_sold}</p>
               </div>
               <div className="px-6 py-3 text-center">
                 <p className="text-lg font-bold">{activeListings.length}</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">Obras</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">{t.stat_works}</p>
               </div>
             </div>
 
@@ -77,7 +80,7 @@ export default async function ArtistProfilePage({
                 rel="noopener noreferrer"
                 className="text-sm font-medium border border-border px-4 py-2 hover:border-foreground hover:bg-muted transition-colors"
               >
-                Portfólio →
+                {t.portfolio}
               </a>
             )}
           </div>
@@ -86,16 +89,14 @@ export default async function ArtistProfilePage({
         {/* Obras */}
         <section>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em] mb-8">
-            {activeListings.length === 0
-              ? 'Sem obras disponíveis'
-              : `${activeListings.length} obra${activeListings.length !== 1 ? 's' : ''} disponíve${activeListings.length !== 1 ? 'is' : 'l'}`}
+            {t.works_available(activeListings.length)}
           </p>
 
           {activeListings.length === 0 ? (
             <div className="border border-dashed border-border p-16 text-center text-sm text-muted-foreground">
-              Este artista ainda não tem obras publicadas.{' '}
+              {t.empty}{' '}
               <Link href="/marketplace" className="underline underline-offset-2 hover:text-foreground">
-                Explora o marketplace
+                {t.explore}
               </Link>
             </div>
           ) : (

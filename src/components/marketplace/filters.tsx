@@ -3,19 +3,17 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback, useTransition } from 'react';
 
-const TYPES = [
-  { value: '', label: 'Tudo' },
-  { value: 'digital', label: 'Digital' },
-  { value: 'physical', label: 'Física' },
-];
+interface FiltersT {
+  search: string;
+  all: string;
+  digital: string;
+  physical: string;
+  sort_recent: string;
+  sort_price_asc: string;
+  sort_price_desc: string;
+}
 
-const SORTS = [
-  { value: '', label: 'Recente' },
-  { value: 'price_asc', label: 'Preço ↑' },
-  { value: 'price_desc', label: 'Preço ↓' },
-];
-
-export function MarketplaceFilters() {
+export function MarketplaceFilters({ t }: { t: FiltersT }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -24,6 +22,18 @@ export function MarketplaceFilters() {
   const q = searchParams.get('q') ?? '';
   const type = searchParams.get('type') ?? '';
   const sort = searchParams.get('sort') ?? '';
+
+  const TYPES = [
+    { value: '', label: t.all },
+    { value: 'digital', label: t.digital },
+    { value: 'physical', label: t.physical },
+  ];
+
+  const SORTS = [
+    { value: '', label: t.sort_recent },
+    { value: 'price_asc', label: t.sort_price_asc },
+    { value: 'price_desc', label: t.sort_price_desc },
+  ];
 
   const updateParam = useCallback(
     (key: string, value: string) => {
@@ -46,7 +56,7 @@ export function MarketplaceFilters() {
       <div className="relative flex-1 max-w-sm">
         <input
           type="search"
-          placeholder="Pesquisar obras..."
+          placeholder={t.search}
           defaultValue={q}
           onChange={e => updateParam('q', e.target.value)}
           className="w-full border border-border bg-background px-4 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-colors font-[inherit]"
@@ -56,17 +66,17 @@ export function MarketplaceFilters() {
       <div className="flex items-center gap-4">
         {/* Type filter */}
         <div className="flex border border-border divide-x divide-border">
-          {TYPES.map(t => (
+          {TYPES.map(item => (
             <button
-              key={t.value}
-              onClick={() => updateParam('type', t.value)}
+              key={item.value}
+              onClick={() => updateParam('type', item.value)}
               className={`px-3 py-2 text-[11px] font-medium uppercase tracking-[0.1em] transition-colors ${
-                type === t.value
+                type === item.value
                   ? 'bg-foreground text-background'
                   : 'bg-background text-muted-foreground hover:text-foreground'
               }`}
             >
-              {t.label}
+              {item.label}
             </button>
           ))}
         </div>

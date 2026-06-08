@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getLang, dict } from '@/lib/i18n';
 import Link from 'next/link';
 import { LogoutButton } from '@/components/logout-button';
 import { LanguageSwitcher } from '@/components/layout/language-switcher';
@@ -6,6 +7,8 @@ import { LanguageSwitcher } from '@/components/layout/language-switcher';
 export async function NavHeader({ backLink }: { backLink?: { href: string; label: string } }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const lang = await getLang();
+  const t = dict[lang].nav;
 
   return (
     <header className="border-b border-border bg-background px-6 py-0 flex items-center justify-between sticky top-0 z-10 h-14">
@@ -19,29 +22,29 @@ export async function NavHeader({ backLink }: { backLink?: { href: string; label
           </Link>
         ) : (
           <Link href="/marketplace" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-            Marketplace
+            {t.marketplace}
           </Link>
         )}
       </div>
-      <div className="flex items-center gap-6">
-        <LanguageSwitcher />
+      <div className="flex items-center gap-4">
+        <LanguageSwitcher current={lang} />
         {user ? (
           <>
             <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
-              Dashboard
+              {t.dashboard}
             </Link>
             <LogoutButton />
           </>
         ) : (
           <>
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Entrar
+              {t.login}
             </Link>
             <Link
               href="/register"
               className="text-sm font-medium bg-foreground text-background px-5 py-2 hover:bg-foreground/85 transition-colors"
             >
-              Criar conta
+              {t.register}
             </Link>
           </>
         )}
