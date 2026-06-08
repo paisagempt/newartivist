@@ -177,11 +177,16 @@ export default async function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-border bg-foreground text-background px-6 py-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <p className="text-sm font-semibold tracking-widest uppercase">Artivist</p>
-          <div className="flex items-center gap-6 text-xs text-background/60">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div>
+            <p className="text-sm font-semibold tracking-widest uppercase mb-1">Artivist</p>
+            <p className="text-xs text-background/40">© {new Date().getFullYear()} Caroline Bampa. Portugal.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-6 text-xs text-background/60">
             <Link href="/marketplace" className="hover:text-background transition-colors">Marketplace</Link>
             <Link href="/register" className="hover:text-background transition-colors">Criar conta</Link>
+            <Link href="/privacy" className="hover:text-background transition-colors">Privacidade</Link>
+            <Link href="/terms" className="hover:text-background transition-colors">Termos</Link>
           </div>
         </div>
       </footer>
