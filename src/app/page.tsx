@@ -140,7 +140,7 @@ export default async function HomePage() {
       {/* Para ONGs */}
       <section className="px-6 py-20 border-t border-border bg-muted">
         <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-16 items-start">
-          <div className="border border-border bg-background p-6 space-y-0 text-sm">
+          <div className="border border-border bg-background p-6 space-y-0 text-sm order-2 sm:order-1">
             <div className="flex justify-between items-center py-4 border-b border-border">
               <span className="text-muted-foreground">{t.ong_table_partners}</span>
               <span className="font-semibold">{t.ong_table_unlimited}</span>
@@ -157,7 +157,7 @@ export default async function HomePage() {
               {t.ong_table_footer}
             </p>
           </div>
-          <div>
+          <div className="order-1 sm:order-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.2em] mb-6">{t.for_ongs_tag}</p>
             <h2 className="text-3xl font-bold mb-5 leading-tight">
               {t.for_ongs_h2[0]}<br />{t.for_ongs_h2[1]}
