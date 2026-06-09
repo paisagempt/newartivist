@@ -5,6 +5,7 @@ import { NavHeader } from '@/components/layout/nav-header';
 import { FulfillOrderButton } from '@/components/dashboard/fulfill-order-button';
 import { EditArtistProfile } from '@/components/dashboard/edit-artist-profile';
 import { EditOngProfile } from '@/components/dashboard/edit-ong-profile';
+import { EditListingPrice } from '@/components/dashboard/edit-listing-price';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -293,7 +294,10 @@ export default async function DashboardPage() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-semibold uppercase tracking-[0.15em]">As minhas obras</h2>
-                  <Link href="/artworks/new" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  <Link
+                    href="/artworks/new"
+                    className="text-xs font-medium bg-foreground text-background px-4 py-2 hover:bg-foreground/85 transition-colors"
+                  >
                     + Nova obra
                   </Link>
                 </div>
@@ -311,25 +315,26 @@ export default async function DashboardPage() {
                       const earned = Number(listing.price_eur) * listing.editions_sold * artistShare / 100;
                       const statusLabel: Record<string, string> = { active: 'Activa', sold: 'Vendida', draft: 'Rascunho' };
                       return (
-                        <Link
-                          key={listing.id}
-                          href={`/artworks/${listing.id}`}
-                          className="flex items-center gap-4 px-4 py-3 hover:bg-muted transition-colors"
-                        >
-                          {listing.cover_image_url && (
-                            <ArtworkImage src={listing.cover_image_url} alt={listing.title} />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{listing.title}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {listing.editions_sold}/{listing.edition_size} vendidas · €{Number(listing.price_eur).toFixed(2)}
-                            </p>
-                            {listing.editions_sold > 0 && (
-                              <p className="text-xs text-muted-foreground">Ganhou €{earned.toFixed(2)}</p>
+                        <div key={listing.id} className="flex items-center gap-4 px-4 py-3 hover:bg-muted transition-colors">
+                          <Link href={`/artworks/${listing.id}`} className="flex items-center gap-4 flex-1 min-w-0">
+                            {listing.cover_image_url && (
+                              <ArtworkImage src={listing.cover_image_url} alt={listing.title} />
                             )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{listing.title}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {listing.editions_sold}/{listing.edition_size} vendidas · €{Number(listing.price_eur).toFixed(2)}
+                              </p>
+                              {listing.editions_sold > 0 && (
+                                <p className="text-xs text-muted-foreground">Ganhou €{earned.toFixed(2)}</p>
+                              )}
+                            </div>
+                          </Link>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <EditListingPrice listingId={listing.id} currentPrice={Number(listing.price_eur)} />
+                            <StatusChip status={listing.status} label={statusLabel[listing.status] ?? listing.status} />
                           </div>
-                          <StatusChip status={listing.status} label={statusLabel[listing.status] ?? listing.status} />
-                        </Link>
+                        </div>
                       );
                     })}
                   </div>
