@@ -57,7 +57,15 @@ export default async function MarketplacePage({
       <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
         {/* Filters */}
         <Suspense>
-          <MarketplaceFilters t={t} />
+          <MarketplaceFilters t={{
+            search: t.search,
+            all: t.all,
+            digital: t.digital,
+            physical: t.physical,
+            sort_recent: t.sort_recent,
+            sort_price_asc: t.sort_price_asc,
+            sort_price_desc: t.sort_price_desc,
+          }} />
         </Suspense>
 
         {/* Results */}
