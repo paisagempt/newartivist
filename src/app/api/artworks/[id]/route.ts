@@ -38,15 +38,27 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const price = Number(body.price_eur);
+  const updates: Record<string, unknown> = {};
 
-  if (isNaN(price) || price <= 0) {
-    return NextResponse.json({ error: 'Preço inválido' }, { status: 400 });
+  if (body.price_eur !== undefined) {
+    const price = Number(body.price_eur);
+    if (isNaN(price) || price <= 0) {
+      return NextResponse.json({ error: 'Preço inválido' }, { status: 400 });
+    }
+    updates.price_eur = price;
+  }
+
+  if (body.description !== undefined) {
+    updates.description = body.description ?? null;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'Nenhum campo para actualizar' }, { status: 400 });
   }
 
   const { error } = await admin
     .from('listings')
-    .update({ price_eur: price })
+    .update(updates)
     .eq('id', id);
 
   if (error) {

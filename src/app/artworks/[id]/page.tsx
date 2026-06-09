@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { BuyButton } from '@/components/artworks/buy-button';
 import { NavHeader } from '@/components/layout/nav-header';
 import { getLang, dict } from '@/lib/i18n';
+import { EditArtworkDetails } from '@/components/artworks/edit-artwork-details';
 
 export default async function ArtworkPage({
   params,
@@ -23,12 +24,13 @@ export default async function ArtworkPage({
 
   const { data: listing } = await admin
     .from('listings')
-    .select('*, ongs(name, mission), artists(id, name)')
+    .select('*, ongs(name, mission), artists(id, name, user_id)')
     .eq('id', id)
     .single();
 
   if (!listing) notFound();
 
+  const isOwner = user && (listing.artists as any)?.user_id === user.id;
   const PLATFORM_FEE = 10;
   const artistPercentage = 100 - PLATFORM_FEE - listing.ong_percentage;
   const price = Number(listing.price_eur);
@@ -130,17 +132,27 @@ export default async function ArtworkPage({
             {/* Preço + comprar */}
             <div className="space-y-4">
               <p className="text-4xl font-bold">€{price.toFixed(2)}</p>
-              <BuyButton
-                listingId={id}
-                price={price}
-                available={available}
-                type={listing.type}
-                userEmail={user?.email ?? null}
-              />
-              {listing.status === 'active' && available > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {t.payment_note} · {listing.type === 'digital' ? t.digital_note : t.physical_note}
-                </p>
+              {isOwner ? (
+                <EditArtworkDetails
+                  listingId={id}
+                  currentPrice={price}
+                  currentDescription={listing.description ?? null}
+                />
+              ) : (
+                <>
+                  <BuyButton
+                    listingId={id}
+                    price={price}
+                    available={available}
+                    type={listing.type}
+                    userEmail={user?.email ?? null}
+                  />
+                  {listing.status === 'active' && available > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {t.payment_note} · {listing.type === 'digital' ? t.digital_note : t.physical_note}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </div>
