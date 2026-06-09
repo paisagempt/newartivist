@@ -18,7 +18,7 @@ export async function NavHeader({ backLink }: { backLink?: { href: string; label
         </Link>
         {backLink ? (
           <Link href={backLink.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            ← {backLink.label}
+            ← <span className="hidden sm:inline">{backLink.label}</span>
           </Link>
         ) : (
           <Link href="/marketplace" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
@@ -27,9 +27,7 @@ export async function NavHeader({ backLink }: { backLink?: { href: string; label
         )}
       </div>
       <div className="flex items-center gap-4">
-        <div className="hidden sm:flex">
-          <LanguageSwitcher current={lang} />
-        </div>
+        <LanguageSwitcher current={lang} />
         {user ? (
           <>
             <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
@@ -44,7 +42,7 @@ export async function NavHeader({ backLink }: { backLink?: { href: string; label
             </Link>
             <Link
               href="/register"
-              className="text-sm font-medium bg-foreground text-background px-5 py-2 hover:bg-foreground/85 transition-colors"
+              className="hidden sm:inline-flex text-sm font-medium bg-foreground text-background px-5 py-2 hover:bg-foreground/85 transition-colors"
             >
               {t.register}
             </Link>

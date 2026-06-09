@@ -62,7 +62,7 @@ export default async function ArtworkPage({
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
           {/* Imagem — sem border-radius, bleed */}
           <div className="bg-muted overflow-hidden aspect-square">
             {listing.cover_image_url ? (
@@ -116,10 +116,6 @@ export default async function ArtworkPage({
                 <div className="px-5 py-3 flex justify-between text-sm">
                   <span>{listing.ongs?.name ?? 'ONG'}</span>
                   <span className="font-medium">€{(price * listing.ong_percentage / 100).toFixed(2)} <span className="text-muted-foreground font-normal">({listing.ong_percentage}%)</span></span>
-                </div>
-                <div className="px-5 py-3 flex justify-between text-sm text-muted-foreground">
-                  <span>{t.platform}</span>
-                  <span>€{(price * PLATFORM_FEE / 100).toFixed(2)} ({PLATFORM_FEE}%)</span>
                 </div>
               </div>
               {listing.ongs?.mission && (
