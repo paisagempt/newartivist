@@ -56,7 +56,7 @@ export default async function ArtistProfilePage({
             <p className="text-sm text-muted-foreground max-w-xl leading-relaxed">{artist.bio}</p>
           )}
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4">
             {/* Stats */}
             <div className="flex divide-x divide-border border border-border">
               <div className="px-6 py-3 text-center">

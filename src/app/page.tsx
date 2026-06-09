@@ -47,7 +47,7 @@ export default async function HomePage() {
             {t.desc}
           </p>
           <div className="flex flex-col gap-2 max-w-sm">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Link
                 href="/register?role=artist"
                 className="flex-1 inline-flex items-center justify-center whitespace-nowrap border border-border px-6 py-3 text-sm font-medium hover:border-foreground hover:bg-muted transition-colors"

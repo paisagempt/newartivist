@@ -63,7 +63,7 @@ export function MarketplaceFilters({ t }: { t: FiltersT }) {
         />
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-3">
         {/* Type filter */}
         <div className="flex border border-border divide-x divide-border">
           {TYPES.map(item => (

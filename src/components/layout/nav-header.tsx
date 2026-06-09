@@ -27,7 +27,9 @@ export async function NavHeader({ backLink }: { backLink?: { href: string; label
         )}
       </div>
       <div className="flex items-center gap-4">
-        <LanguageSwitcher current={lang} />
+        <div className="hidden sm:flex">
+          <LanguageSwitcher current={lang} />
+        </div>
         {user ? (
           <>
             <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:block">
